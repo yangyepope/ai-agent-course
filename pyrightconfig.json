@@ -1,16 +1,42 @@
 {
-  "venvPath": ".",
-  "venv": ".venv",
-  "include": ["01-llm-chat", "02-langchain-basic", "03-langchain-tool", "04-mini-agent"],
-  "exclude": ["**/__pycache__", "**/.venv"],
-  "extraPaths": [
+  "include": [
     "01-llm-chat",
     "02-langchain-basic",
     "03-langchain-tool",
-    "04-mini-agent",
-    ".venv/lib/python3.13/site-packages",
-    "02-langchain-basic/.venv/lib/python3.13/site-packages",
-    "03-langchain-tool/.venv/lib/python3.13/site-packages",
-    "04-mini-agent/.venv/lib/python3.13/site-packages"
+    "04-mini-agent"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    "**/.venv"
+  ],
+  "executionEnvironments": [
+    {
+      "root": "01-llm-chat",
+      "extraPaths": [
+        "01-llm-chat",
+        "01-llm-chat/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "02-langchain-basic",
+      "extraPaths": [
+        "02-langchain-basic",
+        "02-langchain-basic/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "03-langchain-tool",
+      "extraPaths": [
+        "03-langchain-tool",
+        "03-langchain-tool/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "04-mini-agent",
+      "extraPaths": [
+        "04-mini-agent",
+        "04-mini-agent/.venv/lib/python3.13/site-packages"
+      ]
+    }
   ]
 }
