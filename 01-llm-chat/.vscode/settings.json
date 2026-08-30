@@ -1,0 +1,9 @@
+{
+  "python.defaultInterpreterPath": "/opt/ai-agent-course/.venv/bin/python",
+  "python.languageServer": "Pylance",
+  "python.analysis.autoSearchPaths": true,
+  "python.analysis.indexing": true,
+  "python.analysis.packageIndexDepth": 3,
+  "python.analysis.diagnosticMode": "workspace",
+  "python.terminal.activateEnvironment": true
+}

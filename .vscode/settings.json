@@ -1,0 +1,7 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/02-langchain-basic/.venv/bin/python",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/02-langchain-basic",
+    "${workspaceFolder}/02-langchain-basic/app"
+  ]
+}

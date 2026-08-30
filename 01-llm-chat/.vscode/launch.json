@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "FastAPI: 01-llm-chat",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"],
+      "cwd": "/opt/ai-agent-course/01-llm-chat",
+      "python": "/opt/ai-agent-course/.venv/bin/python",
+      "console": "integratedTerminal",
+      "env": {
+        "HTTP_PROXY": "",
+        "HTTPS_PROXY": "",
+        "http_proxy": "",
+        "https_proxy": "",
+        "ALL_PROXY": "",
+        "all_proxy": ""
+      }
+    }
+  ]
+}

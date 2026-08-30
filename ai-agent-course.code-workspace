@@ -1,0 +1,13 @@
+{
+  "folders": [
+    { "name": "01-llm-chat", "path": "01-llm-chat" },
+    { "name": "02-langchain-basic", "path": "02-langchain-basic" }
+  ],
+  "settings": {
+    "python.languageServer": "Pylance",
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.indexing": true,
+    "python.analysis.packageIndexDepth": 3,
+    "python.terminal.activateEnvironment": true
+  }
+}

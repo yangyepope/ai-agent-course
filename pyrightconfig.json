@@ -1,0 +1,12 @@
+{
+  "venvPath": ".",
+  "venv": ".venv",
+  "include": ["01-llm-chat", "02-langchain-basic"],
+  "exclude": ["**/__pycache__", "**/.venv"],
+  "extraPaths": [
+    "01-llm-chat",
+    "02-langchain-basic",
+    ".venv/lib/python3.13/site-packages",
+    "02-langchain-basic/.venv/lib/python3.13/site-packages"
+  ]
+}
