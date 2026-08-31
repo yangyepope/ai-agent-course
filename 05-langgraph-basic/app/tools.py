@@ -5,9 +5,6 @@ from langchain_core.tools import tool
 def query_order(order_id: str) -> str:
     """
     查询指定订单的信息。
-
-    参数:
-    order_id: 订单 ID
     """
     orders = {
         "10001": {
@@ -39,31 +36,27 @@ def query_order(order_id: str) -> str:
 def calculate(expression: str) -> str:
     """
     计算数学表达式。
-
-    例如:
-    100 + 200
-    6999 * 1.08
     """
     try:
-        result = eval(expression)
-        return str(result)
+        return str(eval(expression))
     except Exception as e:
-        return f"计算失败: {e}"
-
-
+        return f"计算失败：{e}"
+    
+    
 @tool
 def query_user(user_id: str) -> str:
     """
     查询用户信息。
     """
     users = {
-        "1": "张三",
-        "2": "李四",
+        "1001": {"name": "张三", "age": 28},
+        "1002": {"name": "李四", "age": 34},
     }
-
+    
     user = users.get(user_id)
-
+    
     if not user:
-        return "用户不存在"
-
-    return f"用户 ID：{user_id}，用户名：{user}"
+        return f"用户 {user_id} 不存在"
+    
+    return f"用户ID：{user_id}，姓名：{user['name']}，年龄：{user['age']}岁"
+    
