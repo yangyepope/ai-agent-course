@@ -38,5 +38,8 @@
         "04-mini-agent/.venv/lib/python3.13/site-packages"
       ]
     }
-  ]
+],
+"extraPaths": [
+    "./04-mini-agent"
+]
 }
