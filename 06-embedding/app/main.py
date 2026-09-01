@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
 
 
+
 load_dotenv()
 from pydantic import SecretStr
 
@@ -85,14 +86,14 @@ def cosine_similarity(
     b: list[float],
 ) -> float:
 
-    a = np.array(a)
-    b = np.array(b)
+    a_array = np.array(a)
+    b_array = np.array(b)
 
     return float(
-        np.dot(a, b)
+        np.dot(a_array, b_array)
         / (
-            np.linalg.norm(a)
-            * np.linalg.norm(b)
+            np.linalg.norm(a_array)
+            * np.linalg.norm(b_array)
         )
     )
 

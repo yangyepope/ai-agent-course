@@ -3,7 +3,10 @@
     "01-llm-chat",
     "02-langchain-basic",
     "03-langchain-tool",
-    "04-mini-agent"
+    "04-mini-agent",
+    "05-langgraph-basic",
+    "06-embedding",
+    "07-vector-db"
   ],
   "exclude": [
     "**/__pycache__",
@@ -37,9 +40,49 @@
         "04-mini-agent",
         "04-mini-agent/.venv/lib/python3.13/site-packages"
       ]
+    },
+    {
+      "root": "05-langgraph-basic",
+      "extraPaths": [
+        "05-langgraph-basic",
+        "05-langgraph-basic/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "06-embedding",
+      "extraPaths": [
+        "06-embedding",
+        "06-embedding/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "07-vector-db",
+      "extraPaths": [
+        "07-vector-db",
+        "07-vector-db/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "08-mini-rag",
+      "extraPaths": [
+        "08-mini-rag",
+        "08-mini-rag/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "09-document-chunking",
+      "extraPaths": [
+        "09-document-chunking",
+        "09-document-chunking/.venv/lib/python3.13/site-packages"
+      ]
     }
-],
-"extraPaths": [
-    "./04-mini-agent"
-]
+  ],
+  "extraPaths": [
+    "./04-mini-agent",
+    "./05-langgraph-basic",
+    "./06-embedding",
+    "./07-vector-db",
+    "./08-mini-rag",
+    "./09-document-chunking"
+  ]
 }
