@@ -29,9 +29,9 @@
 """
 
 import jieba  # 中文分词器：把句子切成一个个词
+from rank_bm25 import BM25Okapi  # BM25 算法实现：基于词频统计打分的检索模型
 
 from app.models import Document  # 文档切片数据结构
-from rank_bm25 import BM25Okapi  # BM25 算法实现：基于词频统计打分的检索模型
 
 
 class KeywordSearch:
