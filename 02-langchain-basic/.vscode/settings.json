@@ -1,5 +1,5 @@
 {
-  "python.defaultInterpreterPath": "/opt/ai-agent-course/02-langchain-basic/.venv/bin/python",
+  "python.defaultInterpreterPath": "/opt/ai-agent-course/.venv/bin/python",
   "python.languageServer": "Pylance",
   "python.analysis.autoSearchPaths": true,
   "python.analysis.indexing": true,

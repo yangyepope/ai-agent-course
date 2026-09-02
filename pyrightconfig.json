@@ -1,4 +1,6 @@
 {
+  "venvPath": ".",
+  "venv": ".venv",
   "include": [
     "01-llm-chat",
     "02-langchain-basic",
@@ -6,99 +8,24 @@
     "04-mini-agent",
     "05-langgraph-basic",
     "06-embedding",
-    "07-vector-db"
+    "07-vector-db",
+    "08-mini-rag",
+    "09-document-chunking",
+    "10-retriever-deeplearning",
+    "11-hybrid-search"
   ],
-  "exclude": [
-    "**/__pycache__",
-    "**/.venv"
-  ],
+  "exclude": ["**/__pycache__", "**/.venv"],
   "executionEnvironments": [
-    {
-      "root": "01-llm-chat",
-      "extraPaths": [
-        "01-llm-chat",
-        "01-llm-chat/.venv/lib/python3.13/site-packages"
-      ]
-    },
-    {
-      "root": "02-langchain-basic",
-      "extraPaths": [
-        "02-langchain-basic",
-        "02-langchain-basic/.venv/lib/python3.13/site-packages"
-      ]
-    },
-    {
-      "root": "03-langchain-tool",
-      "extraPaths": [
-        "03-langchain-tool",
-        "03-langchain-tool/.venv/lib/python3.13/site-packages"
-      ]
-    },
-    {
-      "root": "04-mini-agent",
-      "extraPaths": [
-        "04-mini-agent",
-        "04-mini-agent/.venv/lib/python3.13/site-packages"
-      ]
-    },
-    {
-      "root": "05-langgraph-basic",
-      "extraPaths": [
-        "05-langgraph-basic",
-        "05-langgraph-basic/.venv/lib/python3.13/site-packages"
-      ]
-    },
-    {
-      "root": "06-embedding",
-      "extraPaths": [
-        "06-embedding",
-        "06-embedding/.venv/lib/python3.13/site-packages"
-      ]
-    },
-    {
-      "root": "07-vector-db",
-      "extraPaths": [
-        "07-vector-db",
-        "07-vector-db/.venv/lib/python3.13/site-packages"
-      ]
-    },
-    {
-      "root": "08-mini-rag",
-      "extraPaths": [
-        "08-mini-rag",
-        "08-mini-rag/.venv/lib/python3.13/site-packages"
-      ]
-    },
-    {
-      "root": "09-document-chunking",
-      "extraPaths": [
-        "09-document-chunking",
-        "09-document-chunking/.venv/lib/python3.13/site-packages"
-      ]
-    },
-    {
-      "root": "10-retriever-deeplearning",
-      "extraPaths": [
-        "10-retriever-deeplearning",
-        "10-retriever-deeplearning/.venv/lib/python3.13/site-packages"
-      ]
-    },
-    {
-      "root": "11-hybrid-search",
-      "extraPaths": [
-        "11-hybrid-search",
-        "11-hybrid-search/.venv/lib/python3.13/site-packages"
-      ]
-    }
-  ],
-  "extraPaths": [
-    "./04-mini-agent",
-    "./05-langgraph-basic",
-    "./06-embedding",
-    "./07-vector-db",
-    "./08-mini-rag",
-    "./09-document-chunking",
-    "./10-retriever-deeplearning",
-    "./11-hybrid-search"
+    { "root": "01-llm-chat", "extraPaths": ["01-llm-chat"] },
+    { "root": "02-langchain-basic", "extraPaths": ["02-langchain-basic"] },
+    { "root": "03-langchain-tool", "extraPaths": ["03-langchain-tool"] },
+    { "root": "04-mini-agent", "extraPaths": ["04-mini-agent"] },
+    { "root": "05-langgraph-basic", "extraPaths": ["05-langgraph-basic"] },
+    { "root": "06-embedding", "extraPaths": ["06-embedding"] },
+    { "root": "07-vector-db", "extraPaths": ["07-vector-db"] },
+    { "root": "08-mini-rag", "extraPaths": ["08-mini-rag"] },
+    { "root": "09-document-chunking", "extraPaths": ["09-document-chunking"] },
+    { "root": "10-retriever-deeplearning", "extraPaths": ["10-retriever-deeplearning"] },
+    { "root": "11-hybrid-search", "extraPaths": ["11-hybrid-search"] }
   ]
 }

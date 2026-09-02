@@ -1,7 +1,7 @@
 {
-  "venvPath": ".",
+  "venvPath": "..",
   "venv": ".venv",
   "include": ["app"],
-  "exclude": ["**/__pycache__", ".venv"],
-  "extraPaths": [".", ".venv/lib/python3.13/site-packages"]
+  "exclude": ["**/__pycache__"],
+  "extraPaths": ["."]
 }

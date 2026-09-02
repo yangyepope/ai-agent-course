@@ -1,5 +1,5 @@
 {
-  "python.defaultInterpreterPath": "/opt/ai-agent-course/04-mini-agent/.venv/bin/python",
+  "python.defaultInterpreterPath": "/opt/ai-agent-course/.venv/bin/python",
   "python.languageServer": "Pylance",
   "python.analysis.autoSearchPaths": true,
   "python.analysis.indexing": true,

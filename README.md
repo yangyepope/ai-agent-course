@@ -5,31 +5,45 @@ AI Agent 课程练习项目。
 | 目录 | 说明 |
 |---|---|
 | `01-llm-chat` | FastAPI + OpenAI 兼容接口的最小对话服务 |
+| `02-langchain-basic` | LangChain 基础：invoke / Prompt / OutputParser |
+| `03-langchain-tool` | `@tool` 装饰器与工具对象的属性 |
+| `04-mini-agent` | 手写 Agent 循环（`while` + `tool_map`），不依赖框架 |
+| `05-langgraph-basic` | LangGraph：StateGraph / 条件路由 / add_messages |
+| `06-embedding` | Embedding 与向量相似度 |
+| `07-vector-db` | 向量数据库（FAISS） |
+| `08-mini-rag` | 从 0 手写 Mini RAG |
+| `09-document-chunking` | 文档切分策略（PDF 加载 + 各类 splitter） |
+| `10-retriever-deeplearning` | Retriever 深入：召回质量、元数据过滤、权限 |
+| `11-hybrid-search` | 混合检索：BM25 + 向量 + RRF 融合 + CrossEncoder 精排 |
 | `main.py` | PyCharm 生成的模板文件，与课程无关 |
+
+> 📌 [真实项目待补清单.md](真实项目待补清单.md) —— 从「课程练习」到「能上线的系统」还差什么：
+> 评估体系、路线顺序修正、生产化能力清单，以及本仓库实跑中暴露的真实问题。
 
 ---
 
 ## 1. 环境搭建
 
-Python 版本：**3.13**。虚拟环境统一放在仓库根目录的 `.venv`，各章节共用。
+Python **3.13**。**全部 11 章共用仓库根目录的一个 `.venv`**，依赖清单只有一份：
+根目录的 `requirements.txt`。
 
-> 注意：仓库里可能残留 Windows 下创建的 `.venv`（内含 `Scripts/`、`Lib/`，`pyvenv.cfg` 指向 `D:\...`）。
-> 这种 venv 在 Linux / WSL 下**不可用**，先备份再重建：
->
-> ```bash
-> mv .venv .venv-windows-backup
-> ```
+> 早期各章各建了一个 `.venv`（11 个合计约 18GB，其中 09/10/11 各 5.3GB 是 GPU 版
+> torch 拖进来的整套 `nvidia-*` CUDA 轮子）。现已统一成一个 CPU 版环境，约 1.4GB。
+> 各章的 `requirements.txt` 保留为一行 `-r ../requirements.txt`，
+> 所以 `pip install -r 09-document-chunking/requirements.txt` 这种老写法仍然可用。
 
 ### 方式 A：uv（推荐）
-
-系统自带的 `python3` 若没有 `pip` / `ensurepip`，用 [uv](https://github.com/astral-sh/uv) 最省事：
 
 ```bash
 cd /opt/ai-agent-course
 
 uv venv --python 3.13 .venv
-VIRTUAL_ENV=.venv uv pip install -r 01-llm-chat/requirements.txt
+VIRTUAL_ENV=.venv uv pip install -r requirements.txt --index-strategy unsafe-best-match
 ```
+
+> `--index-strategy unsafe-best-match` 是必须的：`torch==2.13.0+cpu` 只存在于
+> PyTorch 官方索引，而 uv 默认「命中第一个含该包的索引就停」，
+> 会在 PyPI 上找不到 `+cpu` 版本而失败。pip 的默认行为不需要这个开关。
 
 ### 方式 B：标准 venv + pip
 
@@ -38,24 +52,30 @@ cd /opt/ai-agent-course
 
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r 01-llm-chat/requirements.txt
+pip install -r requirements.txt
 ```
 
 > 若报 `No module named ensurepip`，需先装系统包：`sudo apt install python3-venv python3-pip`，或改用方式 A。
 
-### 依赖清单
+### 关于 torch
 
-`01-llm-chat/requirements.txt`：
+清单里锁的是 **CPU 版** `torch==2.13.0+cpu`，通过文件头部的
+`--extra-index-url https://download.pytorch.org/whl/cpu` 获取。
+本课程的 embedding / rerank 数据量在 CPU 上足够快（11 章全链路含 CrossEncoder
+精排也是秒级）。若日后要换 GPU 版，把 `+cpu` 后缀去掉并删掉那行 `--extra-index-url` 即可，
+届时会自动装回约 5GB 的 `nvidia-*` 依赖。
 
-```
-fastapi
-uvicorn[standard]
-pydantic
-python-dotenv
-openai
-```
+### 本地模型缓存
 
----
+09~11 章用到两个 HuggingFace 模型，缓存在 `~/.cache/huggingface`（约 1.2GB）：
+
+| 模型 | 用途 |
+|---|---|
+| `BAAI/bge-small-zh-v1.5` | 中文 Embedding（512 维） |
+| `BAAI/bge-reranker-base` | CrossEncoder 精排 |
+
+首次使用需要联网下载（HuggingFace 要走代理）。已缓存后可加 `HF_HUB_OFFLINE=1`
+强制走本地缓存——这在「模型走代理、大模型端点要直连」两个需求冲突时很有用。
 
 ## 2. 配置
 
@@ -119,6 +139,27 @@ INFO:     Application startup complete.
 ```
 
 停止：`Ctrl + C`。
+
+### 其他章节的运行方式
+
+各章都在自己目录下运行，但**入口写法分两种**，用错会报 `ModuleNotFoundError: No module named 'app'`：
+
+| 章节 | 命令 | 原因 |
+|---|---|---|
+| 02 / 09 等单文件脚本 | `../.venv/bin/python app/main.py` | 脚本内不 `import app.*`，直接跑文件即可 |
+| 01 / 03 / 04 / 05 / 10 / 11 | `../.venv/bin/python -m app.main` | 脚本内有 `from app.xxx import ...`，必须用 `-m` 让 `app` 成为可导入的包 |
+
+> `python app/main.py` 会把 `sys.path[0]` 设成 `app/` 而不是章节根目录，
+> 于是 `app` 这个包自己就找不到了。`-m` 才会把当前目录加进 `sys.path`。
+
+09~11 章跑之前建议加 `HF_HUB_OFFLINE=1`（模型已缓存）并清掉代理，
+两个需求在同一条命令里是冲突的——HuggingFace 要走代理，大模型端点要直连：
+
+```bash
+cd /opt/ai-agent-course/11-hybrid-search
+env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u all_proxy \
+  HF_HUB_OFFLINE=1 ../.venv/bin/python -m app.main
+```
 
 ---
 
@@ -240,5 +281,10 @@ curl -sS --noproxy '*' -w '\n[HTTP %{http_code}] time=%{time_total}s\n' \
 | `messages` 参数标红 `list[dict[str, str]] 不可分配给 Iterable[ChatCompletionMessageParam]` | 裸 dict 不满足 openai 的 TypedDict | 标注为 `list[ChatCompletionMessageParam]`，不要用 `# type: ignore` 掩盖 |
 | `No module named ensurepip` | 系统 Python 缺 venv/pip 组件 | 用 uv（方式 A），或 `sudo apt install python3-venv` |
 | venv 里只有 `Scripts/`、`Lib/` | 这是 Windows 下建的 venv | 备份后按第 1 节重建 |
+| `ModuleNotFoundError: No module named 'app'`，但已经 `cd` 到章节目录了 | 用了 `python app/main.py`，而该脚本内部有 `from app.xxx import` | 改用 `python -m app.main`，见第 3 节 |
+| uv 报找不到 `torch==2.13.0+cpu` | uv 默认「命中第一个含该包的索引就停」，在 PyPI 上没有 `+cpu` 版本 | 安装时加 `--index-strategy unsafe-best-match` |
+| `` `pypdf` package not found `` | 09 章 `PyPDFLoader` 依赖 pypdf，早期各章 requirements.txt 全部漏了它 | 已加入根 `requirements.txt`；重装即可 |
+| `[Errno 101] Network is unreachable ... huggingface.co` | 清掉代理后 HF 连不上（HF 需要代理，大模型端点需要直连） | 模型已缓存时加 `HF_HUB_OFFLINE=1` 强制走本地缓存 |
+| `batch size is invalid, it should not be larger than 20` | 阿里云 embedding 接口单批上限 20，而 `OpenAIEmbeddings` 默认 `chunk_size=1000` | 构造时传 `chunk_size=16` 一类的小值（09 章目前仍有此问题） |
 | 访问 `http://127.0.0.1:8000` 返回 `{"detail":"Not Found"}` | 根路径 `/` 没有注册路由 | 见第 4 节，已加 `/` → `/docs` 重定向；或直接访问 `/docs` |
 | `sed -i 's/xxx$/yyy/'` 改不动 `app/` 下的 py 文件 | 文件是 CRLF 行尾，`$` 锚点被 `\r` 挡住 | 用 `sed -i 's/xxx\r$/yyy\r/'`，或改用 Python 脚本改写 |
