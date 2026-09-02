@@ -84,10 +84,10 @@
       ]
     },
     {
-      "root": "11-hybrid-rag-agent",
+      "root": "11-hybrid-search",
       "extraPaths": [
-        "11-hybrid-rag-agent",
-        "11-hybrid-rag-agent/.venv/lib/python3.13/site-packages"
+        "11-hybrid-search",
+        "11-hybrid-search/.venv/lib/python3.13/site-packages"
       ]
     }
   ],
@@ -99,6 +99,6 @@
     "./08-mini-rag",
     "./09-document-chunking",
     "./10-retriever-deeplearning",
-    "./11-hybrid-rag-agent"
+    "./11-hybrid-search"
   ]
 }

@@ -13,6 +13,7 @@ cuda-bindings==13.3.1
 cuda-pathfinder==1.8.0
 cuda-toolkit==13.0.3.0
 distro==1.9.0
+faiss-cpu==1.15.0
 filelock==3.32.5
 frozenlist==1.8.0
 fsspec==2026.7.0
@@ -26,6 +27,7 @@ httpx-sse==0.4.3
 httpx2==2.12.0
 huggingface_hub==1.29.0
 idna==3.19
+jieba==0.42.1
 Jinja2==3.1.6
 jiter==0.16.0
 joblib==1.6.0
@@ -77,6 +79,7 @@ pydantic_core==2.46.5
 Pygments==2.21.0
 python-dotenv==1.2.3
 PyYAML==6.0.3
+rank-bm25==0.2.2
 regex==2026.9.3
 requests==2.34.2
 requests-toolbelt==1.0.0

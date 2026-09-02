@@ -2,6 +2,9 @@
   "python.defaultInterpreterPath": "${workspaceFolder}/02-langchain-basic/.venv/bin/python",
   "python.analysis.extraPaths": [
     "${workspaceFolder}/02-langchain-basic",
-    "${workspaceFolder}/02-langchain-basic/app"
+    "${workspaceFolder}/02-langchain-basic/app",
+    "${workspaceFolder}/11-hybrid-search",
+    "${workspaceFolder}/11-hybrid-search/app",
+    "${workspaceFolder}/11-hybrid-search/.venv/lib/python3.13/site-packages"
   ]
 }
