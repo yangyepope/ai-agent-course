@@ -13,3 +13,5 @@ cd 03-langchain-tool
 
 按照：
 pip install -U langchain langchain-openai langchain-core python-dotenv
+
+pip freeze > requirements.txt
