@@ -1,0 +1,58 @@
+[
+  {
+    "id": "doc-001",
+    "content": "员工因公出差产生的交通费用，可以按照公司差旅报销制度进行报销。飞机、高铁、火车等交通工具需要保留有效票据。",
+    "source": "finance-policy.pdf",
+    "page": 8,
+    "category": "finance"
+  },
+  {
+    "id": "doc-002",
+    "content": "员工餐饮费用的报销标准根据出差地点和公司规定执行。超过规定标准的部分原则上由员工个人承担。",
+    "source": "finance-policy.pdf",
+    "page": 9,
+    "category": "finance"
+  },
+  {
+    "id": "doc-003",
+    "content": "出差住宿费用可以进行报销，但需要符合不同城市对应的住宿标准。报销时需要提供酒店发票。",
+    "source": "finance-policy.pdf",
+    "page": 10,
+    "category": "finance"
+  },
+  {
+    "id": "doc-004",
+    "content": "员工申请年假需要提前提交申请，并经过直属领导审批。年假的具体天数按照员工的工作年限确定。",
+    "source": "employee-handbook.pdf",
+    "page": 20,
+    "category": "hr"
+  },
+  {
+    "id": "doc-005",
+    "content": "公司提供 Java、Python 和 Go 等技术岗位。技术人员需要遵守公司的代码规范和代码审查流程。",
+    "source": "employee-handbook.pdf",
+    "page": 30,
+    "category": "hr"
+  },
+  {
+    "id": "doc-006",
+    "content": "生产环境数据库需要进行定期备份。数据库备份文件需要存储在独立的存储系统中，并定期验证备份是否可以正常恢复。",
+    "source": "technical-policy.pdf",
+    "page": 15,
+    "category": "technical"
+  },
+  {
+    "id": "doc-007",
+    "content": "Redis 生产环境需要设置合理的 maxmemory 参数，并根据业务场景选择合适的 maxmemory-policy。",
+    "source": "technical-policy.pdf",
+    "page": 22,
+    "category": "technical"
+  },
+  {
+    "id": "doc-008",
+    "content": "Java 服务上线之前需要进行代码审查、单元测试和集成测试。核心服务还需要进行压力测试。",
+    "source": "technical-policy.pdf",
+    "page": 25,
+    "category": "technical"
+  }
+]

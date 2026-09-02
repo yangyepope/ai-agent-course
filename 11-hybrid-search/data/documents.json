@@ -1,0 +1,58 @@
+[
+  {
+    "id": "doc-001",
+    "content": "Redis 是一个高性能的内存数据库，支持 String、List、Set、Hash、Sorted Set 等多种数据结构。",
+    "source": "redis-guide.pdf",
+    "page": 10,
+    "category": "redis"
+  },
+  {
+    "id": "doc-002",
+    "content": "Redis 的 maxmemory-policy 参数用于控制 Redis 达到最大内存限制之后如何处理新的数据写入以及旧数据淘汰。",
+    "source": "redis-guide.pdf",
+    "page": 15,
+    "category": "redis"
+  },
+  {
+    "id": "doc-003",
+    "content": "Redis Cluster 可以将数据分布到多个 Redis 节点，从而提高系统的吞吐能力和水平扩展能力。",
+    "source": "redis-guide.pdf",
+    "page": 30,
+    "category": "redis"
+  },
+  {
+    "id": "doc-004",
+    "content": "Redis 可以使用 LRU、LFU 等策略淘汰数据。maxmemory 参数可以限制 Redis 使用的最大内存。",
+    "source": "redis-guide.pdf",
+    "page": 18,
+    "category": "redis"
+  },
+  {
+    "id": "doc-005",
+    "content": "Java 17 支持 ZGC 垃圾收集器。ZGC 主要用于对延迟敏感的应用，可以显著降低 GC 停顿时间。",
+    "source": "java-guide.pdf",
+    "page": 50,
+    "category": "java"
+  },
+  {
+    "id": "doc-006",
+    "content": "Java 应用可以通过 -XX:+UseZGC JVM 参数启用 ZGC 垃圾收集器。",
+    "source": "java-guide.pdf",
+    "page": 52,
+    "category": "java"
+  },
+  {
+    "id": "doc-007",
+    "content": "G1 是一种面向服务端应用的垃圾收集器，可以通过 -XX:+UseG1GC 参数启用。",
+    "source": "java-guide.pdf",
+    "page": 40,
+    "category": "java"
+  },
+  {
+    "id": "doc-008",
+    "content": "Java 服务上线之前应该进行单元测试、集成测试、代码审查以及必要的压力测试。",
+    "source": "java-guide.pdf",
+    "page": 80,
+    "category": "java"
+  }
+]

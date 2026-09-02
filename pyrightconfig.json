@@ -75,6 +75,20 @@
         "09-document-chunking",
         "09-document-chunking/.venv/lib/python3.13/site-packages"
       ]
+    },
+    {
+      "root": "10-retriever-deeplearning",
+      "extraPaths": [
+        "10-retriever-deeplearning",
+        "10-retriever-deeplearning/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "11-hybrid-rag-agent",
+      "extraPaths": [
+        "11-hybrid-rag-agent",
+        "11-hybrid-rag-agent/.venv/lib/python3.13/site-packages"
+      ]
     }
   ],
   "extraPaths": [
@@ -83,6 +97,8 @@
     "./06-embedding",
     "./07-vector-db",
     "./08-mini-rag",
-    "./09-document-chunking"
+    "./09-document-chunking",
+    "./10-retriever-deeplearning",
+    "./11-hybrid-rag-agent"
   ]
 }

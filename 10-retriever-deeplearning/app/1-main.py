@@ -304,6 +304,9 @@ embeddings = OpenAIEmbeddings(
     # 非 OpenAI 服务商（阿里云百炼）只接受原始字符串数组，
     # 关闭 token 化检查可绕过 token id 数组不兼容问题
     check_embedding_ctx_length=False,
+    # 阿里云百炼 embedding 接口单次最多接受 20 条文本，
+    # 设置 chunk_size 让 SDK 内部自动分批提交
+    chunk_size=20,
 )
 
 # =========================
@@ -338,14 +341,29 @@ FAISS
 # 6. 测试检索
 # =========================
 query = "AI原生到底是什么？"
-results = vector_store.similarity_search(
-    query,
-    k=3,
-)
+# 普通搜索
+# results = vector_store.similarity_search(
+#     query,
+#     k=3,
+# )
+
+# MMR增强检索
 
 # =========================
 # 7. 输出结果
 # =========================
+
+retriever = vector_store.as_retriever(
+    search_type="mmr",
+    search_kwargs={
+        "k": 3,
+        "fetch_k": 10,
+    },
+)
+
+results = retriever.invoke(
+    query
+)
 
 for index, document in enumerate(
     results,
@@ -364,3 +382,54 @@ for index, document in enumerate(
         "Metadata:",
         document.metadata,
     )
+    
+# 现在已经已经实现了一条真正的 RAG Indexing Pipeline
+
+"""  
+                handbook.pdf
+                     │
+                     ▼
+                PyPDFLoader
+                     │
+                     ▼
+                 Documents
+                     │
+                     ▼
+                 Chunking
+                     │
+                     ▼
+                   Chunks
+                     │
+                     ▼
+                 Embedding
+                     │
+                     ▼
+              Vector Database
+"""
+
+# 查询
+""" 
+用户问题
+   │
+   ▼
+Retriever
+   │
+   ▼
+相关 Chunk
+"""
+
+# 再接上一课
+"""  
+相关 Chunk
+    +
+用户 Query
+    ↓
+Prompt
+    ↓
+LLM
+    ↓
+Answer
+"""
+
+
+
