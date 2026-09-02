@@ -77,6 +77,95 @@ pip install -r requirements.txt
 首次使用需要联网下载（HuggingFace 要走代理）。已缓存后可加 `HF_HUB_OFFLINE=1`
 强制走本地缓存——这在「模型走代理、大模型端点要直连」两个需求冲突时很有用。
 
+### WSL2 磁盘空间回收（删了文件但 Windows 空间没变）
+
+在 WSL2 下，Linux 根分区是 Windows 上的一个虚拟磁盘文件：
+
+```
+C:\Users\<用户名>\AppData\Local\wsl\{<GUID>}\ext4.vhdx
+```
+
+**这个文件只会长大，不会自动缩小。** 所以合并虚拟环境省下的 17G，表现是：
+
+| | 空间 |
+|---|---|
+| Linux 里 `df -h /` 的已用 | 31G → 14G（确实释放了） |
+| Windows 上 ext4.vhdx 的体积 | 31.3G → 31.3G（**一点没变**） |
+
+那 17G 只是变成了 vhdx **内部**的空闲块，Linux 写新文件会复用，
+但 Windows 资源管理器里的可用空间不会涨。
+
+#### 方案 A：开启稀疏磁盘（推荐，一劳永逸）
+
+在 **Windows PowerShell（管理员）** 里执行（`Debian` 换成 `wsl -l -v` 里的发行版名）：
+
+```powershell
+wsl --shutdown
+wsl --manage Debian --set-sparse true
+```
+
+转换过程会把当前空闲块还给 Windows，**而且以后每次删东西都会自动回收**，
+不用再手动压缩。
+
+再往 `C:\Users\<用户名>\.wslconfig` 补一段，让新建的磁盘也默认稀疏：
+
+```ini
+[experimental]
+sparseVhd=true
+```
+
+> 稀疏磁盘唯一的代价是写入时有轻微开销，日常开发感觉不到。
+
+#### 方案 B：只做一次性压缩
+
+不想改配置就用 `diskpart`（Windows 家庭版也能用，不需要 Hyper-V）：
+
+```powershell
+wsl --shutdown
+diskpart
+```
+
+进入 diskpart 后逐行输入：
+
+```
+select vdisk file="C:\Users\<用户名>\AppData\Local\wsl\{<GUID>}\ext4.vhdx"
+attach vdisk readonly
+compact vdisk
+detach vdisk
+exit
+```
+
+缺点是治标不治本——下次再删大文件还得重来一遍。
+
+#### 顺带：清理僵尸 swap 文件
+
+WSL 异常退出会在 Temp 里留下 swap 虚拟盘，每个 1~2G：
+
+```
+C:\Users\<用户名>\AppData\Local\Temp\<GUID>\swap.vhdx
+```
+
+`wsl --shutdown` 之后，除当前会话正在用的那个之外都可以直接删掉。
+
+#### 排查命令
+
+```bash
+# Linux 侧实际占用
+df -h /
+du -sh /opt/ai-agent-course/.venv
+
+# 从 WSL 里查看 Windows 上 vhdx 的真实体积
+find /mnt/c -maxdepth 8 -iname 'ext4.vhdx' -printf '%s\t%p\n' 2>/dev/null \
+  | awk -F'\t' '{printf "%.1f GB\t%s\n", $1/1073741824, $2}'
+
+# 发行版名（方案 A 要用）
+/mnt/c/Windows/System32/wsl.exe -l -v
+```
+
+> 两个 `df` 数字对不上时，先看 vhdx 体积——它才是 Windows 真正在意的那个数。
+
+---
+
 ## 2. 配置
 
 `01-llm-chat/.env`（已存在，不要提交到仓库）：
@@ -281,6 +370,7 @@ curl -sS --noproxy '*' -w '\n[HTTP %{http_code}] time=%{time_total}s\n' \
 | `messages` 参数标红 `list[dict[str, str]] 不可分配给 Iterable[ChatCompletionMessageParam]` | 裸 dict 不满足 openai 的 TypedDict | 标注为 `list[ChatCompletionMessageParam]`，不要用 `# type: ignore` 掩盖 |
 | `No module named ensurepip` | 系统 Python 缺 venv/pip 组件 | 用 uv（方式 A），或 `sudo apt install python3-venv` |
 | venv 里只有 `Scripts/`、`Lib/` | 这是 Windows 下建的 venv | 备份后按第 1 节重建 |
+| Linux 里删了几十 G，Windows 可用空间却没变 | WSL2 的 `ext4.vhdx` 只会长大不会自动缩小 | `wsl --manage <发行版> --set-sparse true`，见第 1 节 |
 | `ModuleNotFoundError: No module named 'app'`，但已经 `cd` 到章节目录了 | 用了 `python app/main.py`，而该脚本内部有 `from app.xxx import` | 改用 `python -m app.main`，见第 3 节 |
 | uv 报找不到 `torch==2.13.0+cpu` | uv 默认「命中第一个含该包的索引就停」，在 PyPI 上没有 `+cpu` 版本 | 安装时加 `--index-strategy unsafe-best-match` |
 | `` `pypdf` package not found `` | 09 章 `PyPDFLoader` 依赖 pypdf，早期各章 requirements.txt 全部漏了它 | 已加入根 `requirements.txt`；重装即可 |
