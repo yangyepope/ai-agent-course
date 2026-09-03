@@ -89,44 +89,141 @@ C:\Users\<用户名>\AppData\Local\wsl\{<GUID>}\ext4.vhdx
 
 | | 空间 |
 |---|---|
-| Linux 里 `df -h /` 的已用 | 31G → 14G（确实释放了） |
-| Windows 上 ext4.vhdx 的体积 | 31.3G → 31.3G（**一点没变**） |
+| Linux 里 `df -h /` 的已用 | 31G → 9.5G（确实释放了） |
+| Windows 上 `ext4.vhdx` 的体积 | 31.3G → 31.3G（**一点没变**） |
 
 那 17G 只是变成了 vhdx **内部**的空闲块，Linux 写新文件会复用，
 但 Windows 资源管理器里的可用空间不会涨。
 
-#### 方案 A：开启稀疏磁盘（推荐，一劳永逸）
+#### 先清缓存，再谈磁盘
 
-在 **Windows PowerShell（管理员）** 里执行（`Debian` 换成 `wsl -l -v` 里的发行版名）：
+重建磁盘之前先把数据压到最小，否则等于把垃圾一起搬走：
+
+```bash
+rm -rf ~/.cache/pip                    # pip 下载缓存，可删（本仓省下 3.1G）
+uv cache clean                         # uv 缓存，可删
+rm -rf */.mypy_cache                   # 类型检查缓存，可删
+```
+
+> `~/.cache/huggingface`（约 1.2G）**不要删**——那是 09~11 章的 embedding /
+> rerank 模型，重下很慢。
+>
+> `uv cache clean` 实际只释放约 150M，因为 uv 是**硬链接**安装，
+> 大部分数据被 `.venv` 共享着。这是正常的，不是没清干净。
+
+#### 方案 A：迁到 D 盘 + 重建 vhdx（旧发行版保留为后路）
+
+思路：把数据导出成 tar，在 D 盘**导入成一个新名字的发行版**，C 盘那个
+原封不动留着。全程不执行 `wsl --unregister`，任何一步出问题都能退回去。
+
+> ⚠️ **只要 C 盘的旧发行版还在，那 31.28G 就还占着。**
+> 空间和后路二选一——所以删除被拆成最后一个**可选**步骤（第 7 步），
+> 等在新环境里用顺手了再决定。
+
+| | 现在 | 第 6 步后 | 第 7 步后 |
+|---|---|---|---|
+| C 盘 vhdx | 31.28G | 31.28G（留着） | **0** |
+| D 盘 vhdx | — | 约 10G | 约 10G |
+| D 盘 tar | — | 约 9.5G | 可删 |
+
+**第 0 步：准备**
+
+关掉 VS Code、Claude Code 和所有连着 WSL 的终端，否则 `--shutdown` 会卡住。
+先在 WSL 里清掉可删缓存（见上一节），别把垃圾一起搬走。
+
+**第 1 步：导出**（非破坏性，可随时中止）
 
 ```powershell
 wsl --shutdown
-wsl --manage Debian --set-sparse true
+mkdir D:\wsl-backup
+wsl --export Debian D:\wsl-backup\debian.tar
 ```
 
-转换过程会把当前空闲块还给 Windows，**而且以后每次删东西都会自动回收**，
-不用再手动压缩。
+**第 2 步：验证 tar（这步不能跳）**
 
-再往 `C:\Users\<用户名>\.wslconfig` 补一段，让新建的磁盘也默认稀疏：
-
-```ini
-[experimental]
-sparseVhd=true
+```powershell
+dir D:\wsl-backup\debian.tar
 ```
 
-> 稀疏磁盘唯一的代价是写入时有轻微开销，日常开发感觉不到。
+大小应与 `df -h /` 的已用量相当（本仓 9.5G 数据 → tar 约 8~11G）。
+明显偏小或上一步报错，就停在这里。
 
-#### 方案 B：只做一次性压缩
+**第 3 步：导入为新发行版**（旧的完全不动）
 
-不想改配置就用 `diskpart`（Windows 家庭版也能用，不需要 Hyper-V）：
+```powershell
+wsl --import Debian-D D:\WSL\Debian D:\wsl-backup\debian.tar --version 2
+```
+
+此时 `wsl -l -v` 会同时列出 `Debian`（C 盘）和 `Debian-D`（D 盘）。
+
+**第 4 步：配置新发行版**
+
+`--import` 进来的发行版默认用户是 root，改回普通用户：
+
+```powershell
+wsl -d Debian-D -u root -e sh -c "printf '\n[user]\ndefault=lipengfei\n' >> /etc/wsl.conf"
+wsl --set-default Debian-D
+wsl --shutdown
+```
+
+> 本仓的 `/etc/wsl.conf` 只有 `[boot]` 和 `[network]` 两段，没有 `[user]`，
+> 直接追加是安全的。
+
+**第 5 步：验证**
+
+```powershell
+wsl -d Debian-D -e whoami                        # 应输出 lipengfei
+wsl -d Debian-D -e df -h /                       # 已用应与导出前一致
+wsl -d Debian-D -e ls /opt/ai-agent-course
+wsl -d Debian-D -e /opt/ai-agent-course/.venv/bin/python -c "import torch,faiss;print('ok')"
+```
+
+再确认 VS Code 能连进 `Debian-D`、项目能打开、代码能跑。
+
+**第 6 步：切换日常使用**
+
+第 4 步的 `--set-default` 已经让 `wsl` 默认进 `Debian-D`。
+VS Code 需要在 *WSL: Connect to WSL using Distro…* 里显式选 `Debian-D`。
+
+> ⚠️ **两个发行版从导出那一刻起就各走各的。** 在 `Debian-D` 里改的东西
+> 不会同步回 `Debian`，反之亦然。确认切换后就别再进旧的，否则改动会分叉。
+
+**第 7 步（可选）：回收 C 盘空间**
+
+只有想要那 31.28G 时才做。做之前确保新环境已经用了几天、没有任何问题：
+
+```powershell
+wsl --unregister Debian
+```
+
+这一步不可逆，但 `D:\wsl-backup\debian.tar` 还在，等于仍有一份完整备份。
+再等一段时间确认无误，才删 tar：
+
+```powershell
+Remove-Item D:\wsl-backup\debian.tar
+```
+
+**回滚**
+
+第 7 步之前，任何时候都能退回去：
+
+```powershell
+wsl --set-default Debian          # 切回 C 盘的旧发行版
+wsl --unregister Debian-D         # 不想要新的了，删掉它（不影响旧的）
+```
+
+> 注意：重建后的新 vhdx **以后照样不会自动缩小**（稀疏磁盘被禁用这点没变），
+> 所以别把大缓存（pip / uv / GPU 版 torch）堆回 WSL 里。真需要清的时候，
+> 重跑一遍本流程即可。
+
+#### 走不通的两条路（实测，别浪费时间）
+
+**① `diskpart` → `compact vdisk`：无效。**
 
 ```powershell
 wsl --shutdown
 diskpart
 ```
-
-进入 diskpart 后逐行输入：
-
 ```
 select vdisk file="C:\Users\<用户名>\AppData\Local\wsl\{<GUID>}\ext4.vhdx"
 attach vdisk readonly
@@ -135,7 +232,32 @@ detach vdisk
 exit
 ```
 
-缺点是治标不治本——下次再删大文件还得重来一遍。
+实测跑完 vhdx 从 31.28G → 31.28G，一个字节没回收。
+原因：`compact vdisk` 只能回收在 vhdx 层面**被标记空闲或全零**的块，
+而 ext4 删文件只改 inode，**磁盘块里的旧字节还在**，diskpart 不敢动。
+`Optimize-VHD` 同理也没用（它同样只找全零块）。
+
+**② `--set-sparse`：当前 WSL 版本已被微软禁用。**
+
+```powershell
+wsl --manage Debian --set-sparse true
+```
+
+WSL 2.7.11 上直接报错中止：
+
+```
+由于潜在的数据损坏，目前已禁用稀疏 VHD 支持。
+要强制发行版使用稀疏 VHD，请运行:
+wsl.exe --manage <DistributionName> --set-sparse true --allow-unsafe
+错误代码: Wsl/Service/E_INVALIDARG  只恢复了部分空间
+```
+
+**不要加 `--allow-unsafe`。** 微软是因为一个真实的数据损坏 bug 才禁用它的，
+为了几十 G 去冒丢整个 WSL 磁盘的风险不值得。`.wslconfig` 里写
+`[experimental] sparseVhd=true` 同理不生效。
+
+> 稀疏磁盘本该让空间**自动**回收（`discard` 挂载参数发出的 TRIM 需要稀疏
+> vhdx 才接得住）。它被禁用，正是现在只能靠方案 A 手动重建的根本原因。
 
 #### 顺带：清理僵尸 swap 文件
 
@@ -154,11 +276,14 @@ C:\Users\<用户名>\AppData\Local\Temp\<GUID>\swap.vhdx
 df -h /
 du -sh /opt/ai-agent-course/.venv
 
-# 从 WSL 里查看 Windows 上 vhdx 的真实体积
-find /mnt/c -maxdepth 8 -iname 'ext4.vhdx' -printf '%s\t%p\n' 2>/dev/null \
-  | awk -F'\t' '{printf "%.1f GB\t%s\n", $1/1073741824, $2}'
+# 从 WSL 里查看 Windows 上 vhdx 的真实体积（路径换成自己的）
+V="/mnt/c/Users/<用户名>/AppData/Local/wsl/{<GUID>}/ext4.vhdx"
+awk -v b="$(stat -c %s "$V")" 'BEGIN{printf "%.1f GB\n", b/1073741824}'
 
-# 发行版名（方案 A 要用）
+# 不知道 GUID 时才用 find 去搜（要扫整个 C 盘，很慢，加 timeout 兜底）
+timeout 60 find /mnt/c/Users -maxdepth 6 -iname 'ext4.vhdx' 2>/dev/null
+
+# 发行版名
 /mnt/c/Windows/System32/wsl.exe -l -v
 ```
 
@@ -370,7 +495,7 @@ curl -sS --noproxy '*' -w '\n[HTTP %{http_code}] time=%{time_total}s\n' \
 | `messages` 参数标红 `list[dict[str, str]] 不可分配给 Iterable[ChatCompletionMessageParam]` | 裸 dict 不满足 openai 的 TypedDict | 标注为 `list[ChatCompletionMessageParam]`，不要用 `# type: ignore` 掩盖 |
 | `No module named ensurepip` | 系统 Python 缺 venv/pip 组件 | 用 uv（方式 A），或 `sudo apt install python3-venv` |
 | venv 里只有 `Scripts/`、`Lib/` | 这是 Windows 下建的 venv | 备份后按第 1 节重建 |
-| Linux 里删了几十 G，Windows 可用空间却没变 | WSL2 的 `ext4.vhdx` 只会长大不会自动缩小 | `wsl --manage <发行版> --set-sparse true`，见第 1 节 |
+| Linux 里删了几十 G，Windows 可用空间却没变 | WSL2 的 `ext4.vhdx` 只会长大不会自动缩小，且 `compact vdisk` / `--set-sparse` 均无效 | 导出后重建 vhdx，见第 1 节 |
 | `ModuleNotFoundError: No module named 'app'`，但已经 `cd` 到章节目录了 | 用了 `python app/main.py`，而该脚本内部有 `from app.xxx import` | 改用 `python -m app.main`，见第 3 节 |
 | uv 报找不到 `torch==2.13.0+cpu` | uv 默认「命中第一个含该包的索引就停」，在 PyPI 上没有 `+cpu` 版本 | 安装时加 `--index-strategy unsafe-best-match` |
 | `` `pypdf` package not found `` | 09 章 `PyPDFLoader` 依赖 pypdf，早期各章 requirements.txt 全部漏了它 | 已加入根 `requirements.txt`；重装即可 |
