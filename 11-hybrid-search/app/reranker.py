@@ -36,7 +36,8 @@
 """
 
 # type: ignore[reportMissingImports]  # 交叉编码器：把 (query, doc) 拼一起做相关性打分
-from sentence_transformers import CrossEncoder 
+
+from sentence_transformers import CrossEncoder
 
 
 class Reranker:
