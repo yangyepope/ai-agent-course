@@ -1,3 +1,0 @@
-# 本章依赖已统一到仓库根目录的 requirements.txt（全章节共用一个 .venv）。
-# 保留本文件只为兼容 `pip install -r <章节>/requirements.txt` 的旧习惯。
--r ../requirements.txt
