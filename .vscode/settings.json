@@ -5,6 +5,9 @@
   "python.analysis.indexing": true,
   "python.analysis.packageIndexDepth": 3,
   "python.terminal.activateEnvironment": true,
+
+  // 让 Pylance 能解析各章节内部的同目录 import（每章是独立的脚本目录，不是包）。
+  // 新增章节时记得同步这里、pyrightconfig.json 和 .code-workspace 三处。
   "python.analysis.extraPaths": [
     "${workspaceFolder}/01-llm-chat",
     "${workspaceFolder}/02-langchain-basic",
@@ -16,6 +19,39 @@
     "${workspaceFolder}/08-mini-rag",
     "${workspaceFolder}/09-document-chunking",
     "${workspaceFolder}/10-retriever-deeplearning",
-    "${workspaceFolder}/11-hybrid-search"
-  ]
+    "${workspaceFolder}/11-hybrid-search",
+    "${workspaceFolder}/12-elasticsearch-rag"
+  ],
+
+  // ---------------------------------------------------------------------
+  // Lint / Format：本仓库只用 ruff 一个工具。
+  //
+  // flake8 关掉的原因：它和 ruff 的规则 100% 重叠（ruff 完整实现了 pycodestyle），
+  // 装两个只会重复报同一件事；而且 flake8 会把三引号字符串「内部」的空格也
+  // 当成 W293 空行空格来报——那是纯误报。
+  // 规则集本身写在 pyproject.toml 的 [tool.ruff] 里，编辑器和 CLI 共用。
+  // ---------------------------------------------------------------------
+  "flake8.enabled": false,
+  "ruff.enable": true,
+  "ruff.importStrategy": "fromEnvironment",
+
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    // 保存时自动修：行尾空格、文件末尾缺换行、import 顺序等
+    // 一律当场改掉，不再以波浪线的形式堆在「问题」面板里。
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
+  },
+
+  // 编辑器自身把行尾空格和末尾换行也一起兜住（Markdown 除外——
+  // 它的行尾双空格是有语义的强制换行）。
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "[markdown]": {
+    "files.trimTrailingWhitespace": false
+  }
 }

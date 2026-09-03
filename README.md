@@ -20,50 +20,92 @@ AI Agent 课程练习项目。
 > 📌 [真实项目待补清单.md](真实项目待补清单.md) —— 从「课程练习」到「能上线的系统」还差什么：
 > 评估体系、路线顺序修正、生产化能力清单，以及本仓库实跑中暴露的真实问题。
 
+> 🔧 [Elasticsearch部署与使用.md](Elasticsearch部署与使用.md) —— 12 章配套：docker 单节点部署、客户端必须 8.x 的原因、常见坑排查表。
+
 ---
 
 ## 1. 环境搭建
 
-Python **3.13**。**全部 11 章共用仓库根目录的一个 `.venv`**，依赖清单只有一份：
-根目录的 `requirements.txt`。
+Python **3.13**。**全部 11 章共用仓库根目录的一个 `.venv`**，依赖由 [uv](https://docs.astral.sh/uv/) 管理：
 
-> 早期各章各建了一个 `.venv`（11 个合计约 18GB，其中 09/10/11 各 5.3GB 是 GPU 版
-> torch 拖进来的整套 `nvidia-*` CUDA 轮子）。现已统一成一个 CPU 版环境，约 1.4GB。
-> 各章的 `requirements.txt` 保留为一行 `-r ../requirements.txt`，
-> 所以 `pip install -r 09-document-chunking/requirements.txt` 这种老写法仍然可用。
+| 文件 | 作用 |
+|---|---|
+| `pyproject.toml` | **依赖的唯一事实来源**。只列直接依赖（代码里 import 到的那 19 个包） |
+| `uv.lock` | 锁定全部传递依赖的精确版本（111 条，含平台条件分支；Linux 上实际装 107 个），保证任何机器上装出来一模一样 |
 
-### 方式 A：uv（推荐）
+> 本仓库不提供 `requirements.txt`，请先装 uv。它不依赖系统 Python，装完是一个独立二进制。
+
+### 装 uv
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+> Debian / Ubuntu 上**不要**用 `pip install uv` —— 系统 Python 按 PEP 668 是「外部管理」的，
+> 会直接报 `error: externally-managed-environment`。上面这条脚本装到 `~/.local/bin`，不碰系统 Python。
+
+### 建环境
 
 ```bash
 cd /opt/ai-agent-course
 
-uv venv --python 3.13 .venv
-VIRTUAL_ENV=.venv uv pip install -r requirements.txt --index-strategy unsafe-best-match
+uv sync
 ```
 
-> `--index-strategy unsafe-best-match` 是必须的：`torch==2.13.0+cpu` 只存在于
-> PyTorch 官方索引，而 uv 默认「命中第一个含该包的索引就停」，
-> 会在 PyPI 上找不到 `+cpu` 版本而失败。pip 的默认行为不需要这个开关。
+一条命令搞定：没有 `.venv` 就按 `requires-python` 建一个（连 Python 3.13 都会自动下载），
+然后把环境对齐到 `uv.lock` —— 多的包删掉、少的装上、版本不对的换掉。不需要手工 `activate`。
 
-### 方式 B：标准 venv + pip
+跑脚本有两种方式，选一种：
 
 ```bash
-cd /opt/ai-agent-course
-
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+uv run python -m app.main          # 不用 activate，uv 自己找 .venv
+# 或者老办法
+source .venv/bin/activate && python -m app.main
 ```
 
-> 若报 `No module named ensurepip`，需先装系统包：`sudo apt install python3-venv python3-pip`，或改用方式 A。
+### 加 / 删依赖
+
+```bash
+uv add elasticsearch          # 装包 + 写进 pyproject.toml + 更新 uv.lock，一步到位
+uv add --dev pyright          # 开发期工具，进 [dependency-groups] 的 dev 组
+uv remove jieba               # 反向操作
+```
+
+改完把 `pyproject.toml` 和 `uv.lock` **一起提交**，别人 `uv sync` 就同步了。
+
+> 📘 完整的 uv 命令速查（环境 / 依赖 / 运行 / 缓存 / 排错 / pip 对照表）见 [uv命令手册.md](uv命令手册.md)。
+
+> ⚠️ `uv add` 和 `uv pip install` 是两套东西：后者是 pip 的等价替代品，装完**不会**写进
+> `pyproject.toml`，下次谁跑 `uv sync`，环境被对齐到 lock，这个包就没了。加依赖一律用 `uv add`。
 
 ### 关于 torch
 
-清单里锁的是 **CPU 版** `torch==2.13.0+cpu`，通过文件头部的
-`--extra-index-url https://download.pytorch.org/whl/cpu` 获取。
-本课程的 embedding / rerank 数据量在 CPU 上足够快（11 章全链路含 CrossEncoder
-精排也是秒级）。若日后要换 GPU 版，把 `+cpu` 后缀去掉并删掉那行 `--extra-index-url` 即可，
-届时会自动装回约 5GB 的 `nvidia-*` 依赖。
+锁的是 **CPU 版** `torch==2.13.0+cpu`。本课程的 embedding / rerank 数据量在 CPU 上足够快
+（11 章全链路含 CrossEncoder 精排也是秒级），换 GPU 版会多带进约 5GB 的 `nvidia-*` 依赖。
+
+`+cpu` 后缀的包只存在于 PyTorch 官方索引，PyPI 上没有。`pyproject.toml` 里是这么配的：
+
+```toml
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true          # 只有下面显式指过来的包走这个索引，其余一律走 PyPI
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+```
+
+`explicit = true` 是关键：没有它就得给整个解析过程开 `--index-strategy unsafe-best-match`，
+那会让**每个**包都去 PyTorch 索引碰一次运气。现在只有 torch 走那条路。
+
+若日后要换 GPU 版，删掉这两段并把 torch 的版本约束放宽即可。
+
+### 早期的 11 个 .venv
+
+> 早期各章各建了一个 `.venv`（11 个合计约 18GB，其中 09/10/11 各 5.3GB 是 GPU 版 torch
+> 拖进来的整套 `nvidia-*` CUDA 轮子），且各有一份 `pip freeze` 出来的 `requirements.txt`。
+> 现已统一成一个 CPU 版环境（约 1.4GB）+ 一份 `pyproject.toml`。
+> 这段弯路的教训见 [env创建.md](env创建.md)。
 
 ### 本地模型缓存
 
@@ -493,13 +535,20 @@ curl -sS --noproxy '*' -w '\n[HTTP %{http_code}] time=%{time_total}s\n' \
 | `openai.APIConnectionError: Connection error` | uvicorn 继承了 `HTTPS_PROXY`，但代理没在跑 | 用 `env -u HTTPS_PROXY ...` 启动，见第 3 节 |
 | IDE 里 `import openai` / `import fastapi` 全标红 | 编辑器没选中 `.venv` 解释器 | 已提供 `.vscode/settings.json` 和 `pyrightconfig.json`；PyCharm 需在 Settings → Python Interpreter 手动指向 `/opt/ai-agent-course/.venv/bin/python` |
 | `messages` 参数标红 `list[dict[str, str]] 不可分配给 Iterable[ChatCompletionMessageParam]` | 裸 dict 不满足 openai 的 TypedDict | 标注为 `list[ChatCompletionMessageParam]`，不要用 `# type: ignore` 掩盖 |
-| `No module named ensurepip` | 系统 Python 缺 venv/pip 组件 | 用 uv（方式 A），或 `sudo apt install python3-venv` |
+| `No module named ensurepip` | 系统 Python 缺 venv/pip 组件 | 不用管，`uv sync` 不走 ensurepip；见第 1 节 |
 | venv 里只有 `Scripts/`、`Lib/` | 这是 Windows 下建的 venv | 备份后按第 1 节重建 |
 | Linux 里删了几十 G，Windows 可用空间却没变 | WSL2 的 `ext4.vhdx` 只会长大不会自动缩小，且 `compact vdisk` / `--set-sparse` 均无效 | 导出后重建 vhdx，见第 1 节 |
 | `ModuleNotFoundError: No module named 'app'`，但已经 `cd` 到章节目录了 | 用了 `python app/main.py`，而该脚本内部有 `from app.xxx import` | 改用 `python -m app.main`，见第 3 节 |
-| uv 报找不到 `torch==2.13.0+cpu` | uv 默认「命中第一个含该包的索引就停」，在 PyPI 上没有 `+cpu` 版本 | 安装时加 `--index-strategy unsafe-best-match` |
-| `` `pypdf` package not found `` | 09 章 `PyPDFLoader` 依赖 pypdf，早期各章 requirements.txt 全部漏了它 | 已加入根 `requirements.txt`；重装即可 |
+| uv 报找不到 `torch==2.13.0+cpu` | PyPI 上没有 `+cpu` 版本，它只在 PyTorch 官方索引里 | 已在 `pyproject.toml` 配了 `[[tool.uv.index]]` + `[tool.uv.sources]`，用 `uv sync` 即可；见第 1 节 |
+| `uv sync` 报 `Failed to download torch ... network timeout (current value: 30s)` | torch 的 wheel 约 200MB，网络慢时下不完；uv 默认 HTTP 超时只有 30 秒 | `UV_HTTP_TIMEOUT=600 uv sync`。已下好的部分有缓存，重试不会从头来 |
+| `error: externally-managed-environment` | 用了裸 `pip`。uv 建的 venv 里没有 pip，命令落到系统 Python 上，而 Debian 13 按 PEP 668 禁止往系统目录装包 | 本仓库不用 pip，改用 `uv add` / `uv sync`；别加 `--break-system-packages` |
+| `uv pip install` 装的包，`uv sync` 之后不见了 | `uv pip install` 不写 `pyproject.toml`，`uv sync` 会把环境对齐到 lock、删掉多余的包 | 加依赖一律用 `uv add`，见第 1 节 |
+| `` `pypdf` package not found `` | 09 章 `PyPDFLoader` 依赖 pypdf，早期各章 `pip freeze` 出来的清单全部漏了它 | 已在 `pyproject.toml` 里；`uv sync` 即可 |
 | `[Errno 101] Network is unreachable ... huggingface.co` | 清掉代理后 HF 连不上（HF 需要代理，大模型端点需要直连） | 模型已缓存时加 `HF_HUB_OFFLINE=1` 强制走本地缓存 |
 | `batch size is invalid, it should not be larger than 20` | 阿里云 embedding 接口单批上限 20，而 `OpenAIEmbeddings` 默认 `chunk_size=1000` | 构造时传 `chunk_size=16` 一类的小值（09 章目前仍有此问题） |
 | 访问 `http://127.0.0.1:8000` 返回 `{"detail":"Not Found"}` | 根路径 `/` 没有注册路由 | 见第 4 节，已加 `/` → `/docs` 重定向；或直接访问 `/docs` |
 | `sed -i 's/xxx$/yyy/'` 改不动 `app/` 下的 py 文件 | 文件是 CRLF 行尾，`$` 锚点被 `\r` 挡住 | 用 `sed -i 's/xxx\r$/yyy\r/'`，或改用 Python 脚本改写 |
+| ES `ping()` 返回 `False`，且 `curl --noproxy '*'` 也连不上 9200 | ES 服务没启动（端口无监听） | 用 docker 起单节点 ES（需 sudo）。先 `sudo sysctl -w vm.max_map_count=262144`，再 `sudo docker run -d --name es8 -p 9200:9200 -p 9300:9300 -e discovery.type=single-node -e xpack.security.enabled=false -e ES_JAVA_OPTS="-Xms512m -Xmx512m" docker.elastic.co/elasticsearch/elasticsearch:8.15.5`，等 30~60s 后 `curl -s --noproxy '*' http://127.0.0.1:9200` 应返回 200 |
+| ES `ping()` 返回 `False`，但 `curl --noproxy '*' http://127.0.0.1:9200` 能通 | elasticsearch-py **客户端版本与服务端不匹配**：9.x 客户端发的 `Accept` 头声明 `compatible-with=9`，8.x 服务端只认 8/7，直接 400 `media_type_header_exception`，`ping()` 静默吞掉异常返回 False | 客户端降到 8.x：`uv add "elasticsearch>=8.13,<9"`（本仓库 pyproject.toml 已配 `<9`，改完记得 `uv lock` 再 `uv sync` 对齐） |
+| `curl -s http://127.0.0.1:9200` 输出为空 / HTTP 502 | curl 自动读 `http_proxy=http://127.0.0.1:7891` 环境变量，把本地请求丢给代理；`NO_PROXY` 里 `127.*` 通配写法 curl 不识别，没绕过 | curl 加 `--noproxy '*'`，或先 `env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY` 再 curl |
+| ES 搜索报 403 `license is non-compliant for [Reciprocal Rank Fusion (RRF)]` | RRF 是付费 license 功能，docker 默认 Basic 不含；另外 `retriever` 语法需 ES 8.14+ | 镜像用 8.15.5 + 开 30 天试用：`curl -s --noproxy '*' -X POST "http://127.0.0.1:9200/_license/start_trial?acknowledge=true"`；详见 `Elasticsearch部署与使用.md` |

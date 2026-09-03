@@ -1,0 +1,34 @@
+[
+  {
+    "id": "chunk-001",
+    "content": "Redis 是一个基于内存的高性能键值数据库，常用于缓存、Session、排行榜等场景。",
+    "source": "redis-guide.pdf",
+    "page": 1,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-002",
+    "content": "Redis 的 maxmemory-policy 用于控制 Redis 内存达到 maxmemory 限制后如何淘汰数据。",
+    "source": "redis-guide.pdf",
+    "page": 15,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-003",
+    "content": "Redis Cluster 通过多个节点共同保存数据，并提供数据分片能力。",
+    "source": "redis-cluster.pdf",
+    "page": 8,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-004",
+    "content": "Java G1 垃圾收集器适合较大的堆内存，并通过 Region 管理堆内存。",
+    "source": "java-gc.pdf",
+    "page": 20,
+    "category": "java",
+    "tenant_id": "tenant-001"
+  }
+]

@@ -12,20 +12,85 @@
     "08-mini-rag",
     "09-document-chunking",
     "10-retriever-deeplearning",
-    "11-hybrid-search"
+    "11-hybrid-search",
+    "12-elasticsearch-rag"
   ],
-  "exclude": ["**/__pycache__", "**/.venv"],
+  "exclude": [
+    "**/__pycache__",
+    "**/.venv"
+  ],
   "executionEnvironments": [
-    { "root": "01-llm-chat", "extraPaths": ["01-llm-chat"] },
-    { "root": "02-langchain-basic", "extraPaths": ["02-langchain-basic"] },
-    { "root": "03-langchain-tool", "extraPaths": ["03-langchain-tool"] },
-    { "root": "04-mini-agent", "extraPaths": ["04-mini-agent"] },
-    { "root": "05-langgraph-basic", "extraPaths": ["05-langgraph-basic"] },
-    { "root": "06-embedding", "extraPaths": ["06-embedding"] },
-    { "root": "07-vector-db", "extraPaths": ["07-vector-db"] },
-    { "root": "08-mini-rag", "extraPaths": ["08-mini-rag"] },
-    { "root": "09-document-chunking", "extraPaths": ["09-document-chunking"] },
-    { "root": "10-retriever-deeplearning", "extraPaths": ["10-retriever-deeplearning"] },
-    { "root": "11-hybrid-search", "extraPaths": ["11-hybrid-search"] }
+    {
+      "root": "01-llm-chat",
+      "extraPaths": [
+        "01-llm-chat"
+      ]
+    },
+    {
+      "root": "02-langchain-basic",
+      "extraPaths": [
+        "02-langchain-basic"
+      ]
+    },
+    {
+      "root": "03-langchain-tool",
+      "extraPaths": [
+        "03-langchain-tool"
+      ]
+    },
+    {
+      "root": "04-mini-agent",
+      "extraPaths": [
+        "04-mini-agent"
+      ]
+    },
+    {
+      "root": "05-langgraph-basic",
+      "extraPaths": [
+        "05-langgraph-basic"
+      ]
+    },
+    {
+      "root": "06-embedding",
+      "extraPaths": [
+        "06-embedding"
+      ]
+    },
+    {
+      "root": "07-vector-db",
+      "extraPaths": [
+        "07-vector-db"
+      ]
+    },
+    {
+      "root": "08-mini-rag",
+      "extraPaths": [
+        "08-mini-rag"
+      ]
+    },
+    {
+      "root": "09-document-chunking",
+      "extraPaths": [
+        "09-document-chunking"
+      ]
+    },
+    {
+      "root": "10-retriever-deeplearning",
+      "extraPaths": [
+        "10-retriever-deeplearning"
+      ]
+    },
+    {
+      "root": "11-hybrid-search",
+      "extraPaths": [
+        "11-hybrid-search"
+      ]
+    },
+    {
+      "root": "12-elasticsearch-rag",
+      "extraPaths": [
+        "12-elasticsearch-rag"
+      ]
+    }
   ]
 }

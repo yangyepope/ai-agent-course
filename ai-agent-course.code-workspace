@@ -1,17 +1,57 @@
 {
   "folders": [
-    { "name": "01-llm-chat", "path": "01-llm-chat" },
-    { "name": "02-langchain-basic", "path": "02-langchain-basic" },
-    { "name": "03-langchain-tool", "path": "03-langchain-tool" },
-    { "name": "04-mini-agent", "path": "04-mini-agent" },
-    { "name": "05-langgraph-basic", "path": "05-langgraph-basic" },
-    { "name": "06-embedding", "path": "06-embedding" },
-    { "name": "07-vector-db", "path": "07-vector-db" },
-    { "name": "08-mini-rag", "path": "08-mini-rag" },
-    { "name": "09-document-chunking", "path": "09-document-chunking" },
-    { "name": "10-retriever-deeplearning", "path": "10-retriever-deeplearning" },
-    { "name": "11-hybrid-search", "path": "11-hybrid-search" },
-    { "name": "(仓库根)", "path": "." }
+    {
+      "name": "01-llm-chat",
+      "path": "01-llm-chat"
+    },
+    {
+      "name": "02-langchain-basic",
+      "path": "02-langchain-basic"
+    },
+    {
+      "name": "03-langchain-tool",
+      "path": "03-langchain-tool"
+    },
+    {
+      "name": "04-mini-agent",
+      "path": "04-mini-agent"
+    },
+    {
+      "name": "05-langgraph-basic",
+      "path": "05-langgraph-basic"
+    },
+    {
+      "name": "06-embedding",
+      "path": "06-embedding"
+    },
+    {
+      "name": "07-vector-db",
+      "path": "07-vector-db"
+    },
+    {
+      "name": "08-mini-rag",
+      "path": "08-mini-rag"
+    },
+    {
+      "name": "09-document-chunking",
+      "path": "09-document-chunking"
+    },
+    {
+      "name": "10-retriever-deeplearning",
+      "path": "10-retriever-deeplearning"
+    },
+    {
+      "name": "11-hybrid-search",
+      "path": "11-hybrid-search"
+    },
+    {
+      "name": "12-elasticsearch-rag",
+      "path": "12-elasticsearch-rag"
+    },
+    {
+      "name": "(仓库根)",
+      "path": "."
+    }
   ],
   "settings": {
     "python.defaultInterpreterPath": "/opt/ai-agent-course/.venv/bin/python",
