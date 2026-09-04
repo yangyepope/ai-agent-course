@@ -91,6 +91,12 @@
       "extraPaths": [
         "12-elasticsearch-rag"
       ]
+    },
+    {
+      "root": "13-rag-app",
+      "extraPaths": [
+        "13-rag-app"
+      ]
     }
   ]
 }

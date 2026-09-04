@@ -9,7 +9,6 @@ from pathlib import Path
 
 from app.models import Document
 
-
 DATA_FILE = Path("data/documents.json")
 
 

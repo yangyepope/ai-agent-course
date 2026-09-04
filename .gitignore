@@ -2,3 +2,5 @@
 .env
 __pycache__/
 *.pyc
+# 13-rag-app 运行日志
+13-rag-app/logs/

@@ -1,0 +1,730 @@
+[
+  {
+    "id": "chunk-001",
+    "content": "Redis 是一个基于内存的高性能键值数据库，支持字符串、哈希、列表、集合、有序集合等多种数据结构。由于所有数据都驻留在内存中，读写延迟通常在微秒级，单节点可以支撑十万级别的每秒操作数。常见用途包括缓存热点数据、存储用户 Session、实现排行榜和计数器、以及作为分布式锁的载体。需要注意的是，Redis 并不适合存储全部业务数据，内存成本远高于磁盘，通常只用来放访问频繁的那一小部分。",
+    "source": "redis-guide.pdf",
+    "page": 1,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-002",
+    "content": "maxmemory 参数用于限制 Redis 进程可使用的最大内存，单位是字节，也可以写成 4gb 这样的形式。如果不设置这个参数，Redis 会一直申请内存直到把机器占满，最终被操作系统的 OOM Killer 直接杀掉，造成缓存全部丢失。生产环境建议把 maxmemory 设为物理内存的百分之六十到七十，剩下的留给操作系统、持久化时的写时复制开销以及客户端连接缓冲区。",
+    "source": "redis-guide.pdf",
+    "page": 12,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-003",
+    "content": "maxmemory-policy 用于控制 Redis 内存达到 maxmemory 限制后如何淘汰数据。它的默认值是 noeviction，含义是不淘汰任何数据，直接对所有写命令返回 OOM 错误，读命令仍然可以正常执行。把 Redis 当缓存用时几乎不应该保留这个默认值，因为一旦内存满了整个写入链路就会中断。把 Redis 当数据库或消息队列用时才需要 noeviction，此时数据不能被静默丢弃。",
+    "source": "redis-guide.pdf",
+    "page": 15,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-004",
+    "content": "Redis 提供八种淘汰策略：noeviction、allkeys-lru、allkeys-lfu、allkeys-random、volatile-lru、volatile-lfu、volatile-random 和 volatile-ttl。allkeys 前缀表示在所有键中挑选淘汰对象，volatile 前缀表示只在设置了过期时间的键中挑选。如果使用 volatile 系列策略但所有键都没有过期时间，行为会退化成 noeviction，写入直接报错，这是一个很容易踩到的坑。",
+    "source": "redis-guide.pdf",
+    "page": 16,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-005",
+    "content": "LRU 淘汰最久未被访问的键，LFU 淘汰访问频率最低的键。两者的区别在于 LRU 只看最后一次访问时间，一个被偶然扫描到的冷键会因此被误认为是热键；LFU 统计访问次数并带时间衰减，能更准确地识别真正的热数据。纯缓存场景推荐 allkeys-lru，实现简单开销低；如果业务的访问分布有明显冷热差异，或者存在批量扫描污染缓存的情况，allkeys-lfu 的命中率会明显更高。",
+    "source": "redis-guide.pdf",
+    "page": 18,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-006",
+    "content": "RDB 是内存快照，把某一时刻的全部数据以压缩后的二进制格式写入磁盘文件。触发方式有三种：配置文件里的 save 规则自动触发、客户端执行 BGSAVE 手动触发、以及主从全量同步时由主节点生成。它的优点是文件紧凑、加载速度快，适合做冷备和跨机房传输；缺点是两次快照之间宕机会丢掉这段时间的全部写入，而且 fork 子进程时如果内存占用很大，会造成主进程短暂卡顿。",
+    "source": "redis-guide.pdf",
+    "page": 24,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-007",
+    "content": "AOF 以追加方式把每一条修改数据的命令记录到日志文件末尾。刷盘策略由 appendfsync 控制，共三档：always 每条命令都同步到磁盘，最安全但性能损耗大；everysec 每秒同步一次，是默认值，宕机最多丢一秒的数据；no 完全交给操作系统决定，性能最好但可能丢失几十秒的数据。AOF 文件会随时间不断膨胀，Redis 通过重写机制把它压缩成能产生相同数据集的最小命令集合。",
+    "source": "redis-guide.pdf",
+    "page": 26,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-008",
+    "content": "RDB 和 AOF 各有取舍：RDB 恢复速度快但可能丢失最后一次快照之后的数据，AOF 数据更安全但文件体积大、重放耗时长。生产环境的常见做法是两者同时开启，日常靠 AOF 保证数据完整性，同时定期生成 RDB 作为冷备。重启时 Redis 会优先使用 AOF 恢复，因为它通常更新。Redis 4.0 之后还支持混合持久化，AOF 文件的开头是 RDB 格式的全量数据，后面接增量命令，兼顾了两者的优点。",
+    "source": "redis-guide.pdf",
+    "page": 28,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-009",
+    "content": "Redis 主从复制通过在从节点配置 replicaof 主节点地址来建立。首次连接时执行全量复制：主节点 fork 子进程生成 RDB 发送给从节点，同时把这期间的新写入缓存在复制缓冲区里，RDB 传输完成后再补发。之后进入增量复制阶段，主节点把每条写命令异步传播给从节点。由于是异步复制，主节点宕机时可能有少量已确认的写入还没到从节点，这是 Redis 无法完全避免的数据丢失窗口。",
+    "source": "redis-guide.pdf",
+    "page": 33,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-010",
+    "content": "Sentinel 哨兵负责三件事：持续监控主从节点是否存活、在主节点故障时自动选举从节点提升为新主、以及把新的主节点地址通知给客户端。判断主节点下线分两步，单个哨兵认为它不可达叫主观下线，达到 quorum 个哨兵都这么认为才叫客观下线，然后才开始故障转移。生产环境至少部署三个哨兵并分布在不同机器上，数量为奇数，避免网络分区时出现脑裂或误判。",
+    "source": "redis-guide.pdf",
+    "page": 37,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-011",
+    "content": "大 key 指单个键对应的值体积过大，比如一个包含上百万元素的集合，或者一个几十兆的字符串。它带来三类问题：读取时占满网络带宽导致其他请求排队；集群模式下无法均匀分片，造成某个节点内存远高于其他节点；删除时需要一次性释放大量内存，主线程会被阻塞数百毫秒甚至更久。大 key 通常是设计问题，正确做法是在写入前就按业务维度拆分成多个小键。",
+    "source": "redis-guide.pdf",
+    "page": 42,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-012",
+    "content": "排查大 key 可以使用 redis-cli --bigkeys，它会遍历整个键空间并报告每种数据类型中体积最大的那个键。这个命令基于 SCAN 实现，不会长时间阻塞，但仍会产生可观的 CPU 和网络开销，因此线上应该在从节点上执行。更精细的分析可以用 MEMORY USAGE 命令查看单个键的实际内存占用，或者用 rdb 文件离线分析工具做全量统计。",
+    "source": "redis-guide.pdf",
+    "page": 43,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-013",
+    "content": "删除大 key 应使用 UNLINK 而不是 DEL。DEL 在主线程中同步释放内存，键越大阻塞越久；UNLINK 只是把键从字典中摘除，真正的内存回收交给后台线程异步完成，主线程立刻返回。Redis 4.0 之后还提供了 lazyfree 系列配置，可以让过期删除、淘汰删除、以及 FLUSHALL 都走异步释放路径，避免这类操作造成的延迟毛刺。",
+    "source": "redis-guide.pdf",
+    "page": 47,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-014",
+    "content": "缓存穿透指查询的数据在缓存和数据库里都不存在，导致每次请求都白跑一趟数据库。恶意构造大量不存在的键就能形成攻击。有两种应对办法：一是把查询结果为空这件事也缓存下来，设置一个较短的过期时间；二是在缓存前面加布隆过滤器，用极小的内存判断某个键是否肯定不存在，从而在入口处直接拦掉。两种方案通常一起使用。",
+    "source": "redis-guide.pdf",
+    "page": 51,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-015",
+    "content": "缓存击穿指某个热点键突然过期，而恰好这一瞬间有大量并发请求访问它，于是这些请求全部落到数据库上。它和缓存雪崩的区别是只涉及单个键。常用解法有两种：一是重建缓存时加互斥锁，只让第一个请求去查数据库，其他请求等待或返回旧值；二是给热点键设置永不过期，改由后台任务定时异步刷新内容，从根上消除过期这个时间点。",
+    "source": "redis-guide.pdf",
+    "page": 52,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-016",
+    "content": "缓存雪崩指大量键在同一时刻集中过期，数据库瞬间承受本该由缓存挡住的全部流量，很可能被直接压垮并引发连锁故障。它常见于系统启动时批量预热缓存，或者一批数据用了完全相同的过期时间。解决办法是给过期时间加上随机抖动，比如基础时间三十分钟再加零到五分钟的随机值，把失效时刻打散。此外还应配合限流和熔断，保证即使缓存失效数据库也不会被打挂。",
+    "source": "redis-guide.pdf",
+    "page": 53,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-017",
+    "content": "实现分布式锁必须使用 SET key value NX PX milliseconds 这一条命令，它原子地完成两件事：键不存在时才设置，以及同时设置过期时间。早期教程里先 SETNX 再 EXPIRE 的写法是错误的，如果客户端在两条命令之间崩溃，这把锁就永远不会被释放，最终导致整个业务卡死。value 应该写入一个每次都不同的随机值，用来标识锁的持有者。",
+    "source": "redis-guide.pdf",
+    "page": 58,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-018",
+    "content": "释放分布式锁不能直接 DEL，必须先校验 value 是否等于自己写入的随机值。原因是持有者的业务执行时间可能超过锁的过期时间，此时锁已经自动释放并被别人获取，如果还直接删除就会误删别人的锁。校验和删除这两个动作必须原子，因此要写成 Lua 脚本一次提交给服务端执行，不能在客户端先读再判断再删。",
+    "source": "redis-guide.pdf",
+    "page": 59,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-019",
+    "content": "Redlock 是跨多个相互独立的 Redis 实例的分布式锁算法，要求在超过半数的节点上都加锁成功、且总耗时小于锁的有效期，才算真正获得锁。它试图解决单实例宕机导致锁失效的问题，但学术界对其正确性有争议，核心分歧在于它依赖各节点时钟不发生大幅漂移。对一致性要求极高的场景，应该改用基于 Raft 的 etcd 或 ZooKeeper，它们提供了真正的分布式共识保证。",
+    "source": "redis-guide.pdf",
+    "page": 61,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-020",
+    "content": "pipeline 把多条命令一次性打包发送给服务端，再一次性读回全部结果，从而把 N 次网络往返压缩成一次。在跨机房这类高延迟场景下，收益可能达到几十倍。需要强调的是 pipeline 不提供任何原子性保证：中间的命令可能与其他客户端的命令交错执行，某条命令失败也不会让其他命令回滚。需要原子性应该用 Lua 脚本或事务。",
+    "source": "redis-guide.pdf",
+    "page": 66,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-021",
+    "content": "Redis 执行 Lua 脚本时是原子的，脚本运行期间服务端不会处理任何其他命令。这个特性让它成为实现复杂原子操作的首选工具，比如先判断库存再扣减。但同样因为这个特性，脚本里绝对不能有耗时的循环或大数据量遍历，否则整个实例都会被卡住，所有客户端一起超时。脚本应该尽量短小，并通过 SCRIPT LOAD 缓存后用 EVALSHA 调用以减少网络传输。",
+    "source": "redis-guide.pdf",
+    "page": 68,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-022",
+    "content": "Redis 的过期键采用两种策略配合：惰性删除是在访问某个键时才检查它是否过期，过期就顺手删掉并返回空；定期删除是后台定时任务每隔一段时间随机抽取一批设置了过期时间的键做检查，过期比例高就继续抽下一批。两者结合的原因是纯惰性删除会让永不再访问的过期键一直占着内存，而全量扫描又太耗 CPU。这也意味着已过期但尚未被删除的键仍会短暂占用内存。",
+    "source": "redis-guide.pdf",
+    "page": 72,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-023",
+    "content": "Redis 6.0 引入了多线程，但只用于网络 IO 的读写和协议解析，命令的实际执行仍然由单个主线程串行完成。这个设计保留了单线程模型最大的好处：所有命令天然串行，不存在并发竞争，也不需要加锁。因此单个命令永远是原子的，但多个命令之间不是。也正因为命令执行是单线程，任何一条慢命令都会阻塞整个实例，KEYS、大范围 SORT 这类操作在线上必须禁用。",
+    "source": "redis-guide.pdf",
+    "page": 75,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-024",
+    "content": "Redis Cluster 通过多个节点共同保存数据来实现水平扩展。整个键空间被划分成 16384 个哈希槽，每个主节点负责其中一段连续或离散的槽位。客户端计算键的 CRC16 值再对 16384 取模就能知道它属于哪个槽，进而知道该访问哪个节点。槽的数量固定为 16384 是一个工程折中：它足够多以支持细粒度迁移，同时槽位图压缩后只占两千字节，便于节点间频繁交换。",
+    "source": "redis-cluster.pdf",
+    "page": 5,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-025",
+    "content": "客户端访问的键不在当前节点时，节点会返回 MOVED 重定向，告诉客户端正确的节点地址，客户端应据此更新本地缓存的槽位映射表。如果这个槽正处于迁移过程中，节点返回的是 ASK 重定向，这是一次性的临时跳转，客户端不应该更新映射表。两者的区别很重要：把 ASK 当成 MOVED 处理会导致客户端在迁移期间反复写错映射，产生大量无效重定向。",
+    "source": "redis-cluster.pdf",
+    "page": 8,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-026",
+    "content": "Redis Cluster 不支持跨槽的多键操作。执行 MGET 时如果多个键分散在不同的槽上，服务端会直接返回 CROSSSLOT 错误而不是替客户端做聚合。同样地，事务和 Lua 脚本中涉及的所有键也必须落在同一个槽。这是从单机迁移到集群时最常遇到的兼容性问题，很多原本正常的代码会在切换后突然报错。",
+    "source": "redis-cluster.pdf",
+    "page": 13,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-027",
+    "content": "使用哈希标签可以把多个键强制放进同一个槽。写法是在键名中用花括号包住需要一致的部分，例如 user:{1001}:name 和 user:{1001}:age，Redis 只对花括号内的 1001 计算槽位，因此这两个键必定落在同一节点，可以参与同一个事务或多键命令。代价是失去了自动均衡，如果某个标签下的数据量特别大，会造成明显的数据倾斜。",
+    "source": "redis-cluster.pdf",
+    "page": 14,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-028",
+    "content": "Cluster 模式下每个主节点都应该配置至少一个从节点。主节点故障时，集群内的其他主节点通过投票把它的从节点提升为新的主节点，整个过程不需要额外的哨兵组件，因为 Cluster 自带故障检测和选举能力。如果某个主节点及其所有从节点同时宕机，它负责的那部分槽就会不可用；默认配置下这会导致整个集群拒绝服务，可以通过关闭 cluster-require-full-coverage 让其余槽继续提供服务。",
+    "source": "redis-cluster.pdf",
+    "page": 19,
+    "category": "redis",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-029",
+    "content": "InnoDB 的索引使用 B+ 树结构。非叶子节点只存放键值和指向子节点的指针，用于导航；所有行数据都存在叶子节点上，并且叶子节点之间用双向链表相连。这个结构带来两个好处：树的高度很低，通常三到四层就能存下上千万行，一次查询只需要几次磁盘 IO；叶子节点有序且相连，因此范围查询和排序可以顺序扫描，不需要回到树根。",
+    "source": "mysql-index.pdf",
+    "page": 6,
+    "category": "mysql",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-030",
+    "content": "聚簇索引的叶子节点直接存放完整的行数据，因此一张表只能有一个聚簇索引，通常就是主键索引。如果没有显式定义主键，InnoDB 会挑一个非空唯一索引，都没有的话就自己生成一个隐藏的六字节行 ID。二级索引的叶子节点存的不是行数据，而是主键值，这就是为什么主键不宜过长：每个二级索引都要重复存一份主键。",
+    "source": "mysql-index.pdf",
+    "page": 9,
+    "category": "mysql",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-031",
+    "content": "回表指先通过二级索引找到主键值，再拿主键去聚簇索引中查出完整行数据的过程。它需要额外走一遍 B+ 树，而且主键在二级索引里的顺序是乱的，因此产生的是随机 IO，代价远高于顺序读。当二级索引筛选出的行数很多时，优化器会认为回表比全表扫描更慢，从而干脆放弃索引改走全表扫描，这就是所谓的索引选择性不足。",
+    "source": "mysql-index.pdf",
+    "page": 11,
+    "category": "mysql",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-032",
+    "content": "覆盖索引指查询所需的全部列都能直接从索引中取到，完全不需要回表。在 EXPLAIN 的 Extra 列看到 Using index 就说明用上了覆盖索引。它是最有效的优化手段之一：把 SELECT * 改成只查需要的列，并把这些列加进联合索引，往往能让查询快一个数量级。代价是索引变宽，写入时维护成本更高，占用的磁盘和内存也更多。",
+    "source": "mysql-index.pdf",
+    "page": 13,
+    "category": "mysql",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-033",
+    "content": "联合索引遵循最左前缀原则。为 (a, b, c) 建立索引后，查询条件包含 a、或者 a 和 b、或者 a 和 b 和 c 都能命中索引；但只用 b、只用 c、或者 b 和 c 组合都无法命中，因为 B+ 树是先按 a 排序，a 相同再按 b 排序。范围查询会中断后续列的使用：a 等值加 b 范围时 c 用不上索引，只能在回表后过滤。",
+    "source": "mysql-index.pdf",
+    "page": 17,
+    "category": "mysql",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-034",
+    "content": "以下情况会导致索引失效：对索引列使用函数或参与表达式计算，比如 WHERE YEAR(created_at) = 2024；发生隐式类型转换，比如字符串列用数字比较；LIKE 以通配符开头；OR 连接的条件中存在没有索引的列；以及 IS NOT NULL 且该列大部分为非空时。这些情况的共同点是无法把查询条件转换成 B+ 树上的一段连续区间。",
+    "source": "mysql-index.pdf",
+    "page": 21,
+    "category": "mysql",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-035",
+    "content": "EXPLAIN 的 type 列反映表的访问方式，从最优到最差依次是 system、const、eq_ref、ref、range、index、ALL。const 表示通过主键或唯一索引等值查询，最多返回一行；ref 表示走非唯一索引等值查询；range 是索引范围扫描；index 是扫描整棵索引树；ALL 则是全表扫描。线上慢查询排查时，看到 index 或 ALL 基本就说明需要加索引或者改写 SQL 了。",
+    "source": "mysql-index.pdf",
+    "page": 25,
+    "category": "mysql",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-036",
+    "content": "索引条件下推把 WHERE 子句中那些能用索引列判断的条件，从 MySQL 服务层下推到 InnoDB 存储引擎层去过滤，从而减少回表的次数。举例来说，索引是 (name, age) 而查询条件是 name 前缀匹配加 age 等值，没有下推时要把所有 name 匹配的行都回表再判断 age，有了下推则在索引里就把 age 不符的行剔掉。EXPLAIN 的 Extra 显示 Using index condition 表示已生效。",
+    "source": "mysql-index.pdf",
+    "page": 29,
+    "category": "mysql",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-037",
+    "content": "事务的四个特性是原子性、一致性、隔离性和持久性，合称 ACID。原子性由 undo log 实现，出错时用它把已做的修改逐条回滚；持久性由 redo log 实现，提交时只要 redo log 落盘，即使数据页还在内存里宕机也能恢复；隔离性由锁和 MVCC 共同实现；一致性是前三者加上业务约束共同保证的结果，而不是一个独立机制。",
+    "source": "mysql-transaction.pdf",
+    "page": 4,
+    "category": "mysql",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-038",
+    "content": "SQL 标准定义了四种隔离级别，从低到高是读未提交、读已提交、可重复读和串行化，分别对应能否出现脏读、不可重复读和幻读。MySQL 的 InnoDB 默认使用可重复读，这与 Oracle、PostgreSQL 默认的读已提交不同，历史原因是早期 binlog 只有 STATEMENT 格式，低隔离级别会导致主从数据不一致。InnoDB 在可重复读级别下通过间隙锁额外解决了幻读问题。",
+    "source": "mysql-transaction.pdf",
+    "page": 7,
+    "category": "mysql",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-039",
+    "content": "MVCC 通过为每一行维护多个版本来实现非阻塞读。每行隐藏地记录了创建它的事务 ID 和回滚指针，事务开始时生成一个 Read View 快照，读取时沿回滚指针往前找，直到找到对当前快照可见的那个版本。这样读操作完全不需要加锁，也就不会被写操作阻塞，写也不会被读阻塞。代价是 undo log 需要保留足够久，长事务会导致 undo 无法清理而持续膨胀。",
+    "source": "mysql-transaction.pdf",
+    "page": 12,
+    "category": "mysql",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-040",
+    "content": "undo log 记录的是数据修改前的样子，属于逻辑日志，用途有两个：事务回滚时据此撤销修改，以及 MVCC 读取历史版本。redo log 记录的是数据页的物理修改，采用固定大小的循环写入，用途是宕机重启后把已提交但还没刷盘的修改重放出来。两者的写入时机也不同：undo 在修改前写，redo 在提交时必须落盘，这就是所谓的 WAL 先写日志再写数据。",
+    "source": "mysql-transaction.pdf",
+    "page": 15,
+    "category": "mysql",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-041",
+    "content": "间隙锁锁定的是索引记录之间的空隙而不是记录本身，next-key lock 则是记录锁加上它前面那段间隙锁的组合。InnoDB 在可重复读级别下默认使用 next-key lock，目的是阻止其他事务在区间内插入新行，从而避免幻读。副作用是锁的范围比预期大得多，等值查询一个不存在的值也会锁住一整段区间，这是很多线上死锁和锁等待的根源。",
+    "source": "mysql-transaction.pdf",
+    "page": 19,
+    "category": "mysql",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-042",
+    "content": "死锁是两个或多个事务各自持有对方需要的锁而互相等待。InnoDB 内置死锁检测，发现环路后会自动回滚其中代价较小的那个事务，报 Deadlock found 错误，因此死锁通常不会让数据库卡死，但会造成业务偶发失败。排查手段是 SHOW ENGINE INNODB STATUS，它会输出最近一次死锁双方持有和等待的锁。预防上最有效的做法是让所有事务按固定顺序访问资源。",
+    "source": "mysql-transaction.pdf",
+    "page": 23,
+    "category": "mysql",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-043",
+    "content": "binlog 有三种格式：STATEMENT 记录原始 SQL 语句，文件小但遇到 NOW()、RAND() 这类不确定函数会导致主从数据不一致；ROW 记录每一行变更前后的完整值，文件大但绝对准确；MIXED 由 MySQL 判断该用哪种。生产环境的主从复制一律推荐 ROW。binlog 和 redo log 是两套完全不同的日志，前者在服务层用于复制和恢复到任意时间点，后者在存储引擎层用于崩溃恢复。",
+    "source": "mysql-transaction.pdf",
+    "page": 27,
+    "category": "mysql",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-044",
+    "content": "JVM 的堆内存按分代假说划分为新生代和老年代。分代假说包含两条经验规律：绝大多数对象朝生夕灭，以及熬过多次回收的对象往往能继续存活很久。基于第一条，新生代采用复制算法，每次只需把极少数存活对象搬走，回收速度极快；基于第二条，老年代采用标记整理或标记清除算法，回收频率低但单次耗时长。分代的本质是用不同算法处理生命周期不同的对象。",
+    "source": "java-gc.pdf",
+    "page": 8,
+    "category": "java",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-045",
+    "content": "新生代进一步分为一个 Eden 区和两个 Survivor 区，默认比例是 8:1:1。新对象在 Eden 分配，Eden 满时触发 Minor GC，把 Eden 和其中一个 Survivor 里的存活对象复制到另一个 Survivor，年龄加一，然后整体清空。年龄达到阈值（默认十五）就晋升到老年代。留两个 Survivor 轮换是为了避免复制算法产生内存碎片，代价是永远有百分之十的新生代空间闲置。",
+    "source": "java-gc.pdf",
+    "page": 12,
+    "category": "java",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-046",
+    "content": "Java G1 垃圾收集器适合较大的堆内存，并通过 Region 管理堆内存。它把整个堆划分为一两千个大小相等的 Region，每个 Region 可以动态扮演 Eden、Survivor 或 Old 的角色，因此新生代和老年代不再要求物理连续，也不需要预先划定比例。超过半个 Region 大小的对象会被放进专门的 Humongous Region。这个设计让 G1 能够只回收一部分 Region，从而把停顿时间控制在可预测的范围内。",
+    "source": "java-gc.pdf",
+    "page": 20,
+    "category": "java",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-047",
+    "content": "G1 通过 -XX:MaxGCPauseMillis 设定期望的停顿时间，默认两百毫秒。收集器会根据历史回收数据估算每个 Region 的回收耗时和可释放空间，然后在预算内挑选收益最高的若干 Region 组成回收集合，这就是 Garbage First 名称的来源。需要注意这只是一个期望值而非硬保证，设得过小会导致每次回收的 Region 太少，垃圾产生速度超过回收速度，最终退化成全堆回收。",
+    "source": "java-gc.pdf",
+    "page": 22,
+    "category": "java",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-048",
+    "content": "CMS 以获取最短停顿时间为目标，回收过程分初始标记、并发标记、重新标记和并发清除四步，其中只有两次标记需要暂停应用线程。它采用标记清除算法，不做内存整理，因此运行久了会产生大量碎片，可能出现老年代总空间足够却无法分配大对象的情况，从而触发一次代价极高的 Full GC。CMS 在 JDK 9 被标记为废弃，JDK 14 正式移除，取代它的是 G1。",
+    "source": "java-gc.pdf",
+    "page": 26,
+    "category": "java",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-049",
+    "content": "ZGC 使用染色指针和读屏障实现并发的对象转移和整理。染色指针把标记信息直接存在指针的高位里，因此不需要额外的记录结构；读屏障则保证应用线程即使读到正在被搬移的对象也能拿到正确地址。其结果是几乎所有工作都能与应用线程并发进行，停顿时间不随堆大小增长，在 TB 级堆上仍然稳定保持毫秒级，代价是吞吐量略低于 G1，且对 CPU 资源要求更高。",
+    "source": "java-gc.pdf",
+    "page": 31,
+    "category": "java",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-050",
+    "content": "Full GC 的常见触发原因有：老年代空间不足；方法区或元空间不足；显式调用 System.gc()；Minor GC 后需要晋升的对象总大小超过老年代剩余空间；以及 CMS 并发回收失败退化为串行回收。Full GC 会暂停所有应用线程并回收整个堆，耗时通常是 Minor GC 的几十倍。线上排查内存问题时，关注点应该是 Full GC 的频率和单次耗时，而不是 Minor GC。",
+    "source": "java-gc.pdf",
+    "page": 36,
+    "category": "java",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-051",
+    "content": "排查 GC 问题的常用参数：-Xlog:gc* 输出详细的 GC 日志，包含每次回收的原因、各区域变化和耗时；-XX:+HeapDumpOnOutOfMemoryError 在发生内存溢出时自动导出堆快照，配合 -XX:HeapDumpPath 指定路径；-XX:+PrintGCDetails 是旧版本的等价参数。拿到堆快照后可以用 MAT 或 JProfiler 分析对象引用链，定位到底是哪些对象没有被释放。",
+    "source": "java-gc.pdf",
+    "page": 40,
+    "category": "java",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-052",
+    "content": "synchronized 的锁会随竞争程度逐级升级：初始是无锁，第一个线程进入时变成偏向锁，只在对象头里记下线程 ID，后续同一线程进入几乎没有开销；出现第二个线程竞争时升级为轻量级锁，通过 CAS 自旋争抢；自旋若干次仍失败则升级为重量级锁，线程被挂起并交给操作系统调度。这个升级过程是单向不可逆的，因此高竞争场景下偏向锁反而成了负担，JDK 15 之后默认关闭了它。",
+    "source": "java-concurrent.pdf",
+    "page": 5,
+    "category": "java",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-053",
+    "content": "volatile 提供两个保证：可见性，即一个线程的写入立刻对其他线程可见；以及禁止指令重排，通过内存屏障阻止编译器和处理器把它前后的指令调换顺序。但它不保证原子性，i++ 这样的复合操作包含读取、加一、写回三步，即使加了 volatile 仍然线程不安全。需要原子性应该用 AtomicInteger 或加锁。volatile 的典型正确用法是作为状态标志位，或者配合双重检查实现单例。",
+    "source": "java-concurrent.pdf",
+    "page": 9,
+    "category": "java",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-054",
+    "content": "ThreadLocal 在线程池场景下容易造成内存泄漏。原因是线程池中的线程会被长期复用而不销毁，而 ThreadLocalMap 挂在线程对象上，它的 key 是弱引用而 value 是强引用，key 被回收后 value 却仍被线程持有，形成一条无法回收的引用链。正确做法是在 finally 块中显式调用 remove 清理。这个坑在 Web 应用里尤其常见，因为 Servlet 容器的工作线程几乎永久存活。",
+    "source": "java-concurrent.pdf",
+    "page": 14,
+    "category": "java",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-055",
+    "content": "线程池的七个构造参数是：核心线程数、最大线程数、空闲线程存活时间、时间单位、任务队列、线程工厂和拒绝策略。其中任务队列的选择影响最大：无界队列会让最大线程数形同虚设并可能耗尽内存，SynchronousQueue 则会让每个任务都尝试创建新线程。生产环境应该使用有界队列并显式指定拒绝策略，同时通过线程工厂给线程起有意义的名字，方便排查问题时看线程栈。",
+    "source": "java-concurrent.pdf",
+    "page": 18,
+    "category": "java",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-056",
+    "content": "线程池处理新任务的顺序是：核心线程数没满就创建新的核心线程执行；核心线程已满则把任务放进队列；队列也满了才继续创建非核心线程直到达到最大线程数；最大线程数和队列都满了才触发拒绝策略。很多人误以为会先扩到最大线程数再入队，这是最常见的理解错误。它带来的实际后果是：用了无界队列时非核心线程永远不会被创建。",
+    "source": "java-concurrent.pdf",
+    "page": 19,
+    "category": "java",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-057",
+    "content": "AQS 是 ReentrantLock、Semaphore、CountDownLatch、ReentrantReadWriteLock 的共同基础。它内部维护一个 volatile 修饰的 int 类型 state 和一个存放等待线程的 CLH 双向队列，把加锁解锁抽象成对 state 的 CAS 修改，具体语义由子类通过重写 tryAcquire 和 tryRelease 来定义。ReentrantLock 用 state 记重入次数，Semaphore 用它记剩余许可数，CountDownLatch 用它记剩余计数。",
+    "source": "java-concurrent.pdf",
+    "page": 24,
+    "category": "java",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-058",
+    "content": "CAS 是比较并交换，它读出旧值、比较、写入新值三步由 CPU 指令保证原子，是无锁并发的基础。它有三个已知问题：ABA 问题，值被改成 B 又改回 A，CAS 会误判为没有变化，解决办法是用 AtomicStampedReference 加版本号；自旋开销，高竞争下大量线程空转消耗 CPU；以及只能保证单个变量的原子性，多个变量需要用 AtomicReference 打包或者干脆加锁。",
+    "source": "java-concurrent.pdf",
+    "page": 28,
+    "category": "java",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-059",
+    "content": "Kafka 的 Topic 按 Partition 做水平切分，每个 Partition 是一个只能在末尾追加、写入后不可修改的日志文件，消息在其中有严格的先后顺序并被分配一个单调递增的 offset。Partition 数量决定了消费的并行上限，因为同一消费组内一个 Partition 只能被一个消费者处理。Partition 只能增加不能减少，因此规划时应留出余量，通常按预期峰值吞吐除以单 Partition 处理能力来估算。",
+    "source": "kafka-guide.pdf",
+    "page": 6,
+    "category": "kafka",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-060",
+    "content": "同一个消费组内，一个 Partition 只会被分配给一个消费者，这是 Kafka 保证分区内顺序消费的前提。因此消费者数量超过 Partition 数量时，多出来的消费者会完全空闲，无法通过继续加机器来提升消费速度。想扩大消费并行度只能先增加 Partition。不同消费组之间互不影响，各自维护独立的 offset，因此同一份消息可以被多个业务方各自消费一遍。",
+    "source": "kafka-guide.pdf",
+    "page": 10,
+    "category": "kafka",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-061",
+    "content": "消费者加入或退出消费组、消费者心跳超时、以及 Topic 的 Partition 数量发生变化，都会触发 Rebalance 重新分配分区。Rebalance 期间整个消费组会停止消费，分区多时可能持续数秒甚至更久，因此应尽量避免频繁发生。常见诱因是单条消息处理太慢导致两次 poll 的间隔超过 max.poll.interval.ms，被误判为消费者已死。应对办法是减小 max.poll.records 或者把耗时逻辑异步化。",
+    "source": "kafka-guide.pdf",
+    "page": 13,
+    "category": "kafka",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-062",
+    "content": "ISR 是与 Leader 保持同步的副本集合，只有在 ISR 中的副本才有资格在 Leader 故障时被选为新 Leader。生产者的 acks 参数决定可靠性等级：acks=0 发出即返回，可能丢消息；acks=1 只等 Leader 写入，Leader 宕机时未同步的消息会丢；acks=all 需要 ISR 中所有副本都确认，可靠性最高但延迟也最高。acks=all 还必须配合 min.insync.replicas 大于一才真正有意义。",
+    "source": "kafka-guide.pdf",
+    "page": 17,
+    "category": "kafka",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-063",
+    "content": "Kafka 只保证单个 Partition 内部的消息顺序，不保证跨 Partition 的全局顺序。想要全局有序只能把 Topic 设成单 Partition，代价是彻底失去并行能力，吞吐会被限制在单机水平。实际做法是按业务键做哈希，把同一个实体的所有消息路由到同一个 Partition，这样就得到了业务维度上的局部有序，比如保证同一个订单的状态变更消息按顺序被处理。",
+    "source": "kafka-guide.pdf",
+    "page": 21,
+    "category": "kafka",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-064",
+    "content": "开启 enable.idempotence 后，Kafka 为每个生产者分配一个 PID，并为每个 Partition 维护递增的序列号，Broker 端据此识别并丢弃重复消息，从而让重试不再导致消息重复写入。它只能保证单个生产者会话内、单个 Partition 上的幂等。跨多个 Partition 的原子写入需要开启事务，用 initTransactions、beginTransaction 和 commitTransaction 把多次发送包成一个整体。",
+    "source": "kafka-guide.pdf",
+    "page": 25,
+    "category": "kafka",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-065",
+    "content": "日志压缩是一种保留策略，它为每个消息键只保留最新的那一条记录，因此适合存储状态快照类数据，比如用户的当前配置。它与按时间或按总大小删除旧数据的策略是两种不同机制，可以针对不同 Topic 分别配置。压缩后的 Topic 可以被完整重放来重建当前状态，这是 Kafka Streams 的状态存储和 Connect 的偏移量存储所依赖的基础能力。",
+    "source": "kafka-guide.pdf",
+    "page": 29,
+    "category": "kafka",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-066",
+    "content": "Elasticsearch 为 text 类型字段建立倒排索引，即记录每个词分别出现在哪些文档中、出现了几次、在什么位置。查询时不需要扫描全部文档，只要查这张词到文档的映射表，因此速度极快。打分算法是 BM25，它综合考虑三个因素：查询词在该文档中出现的频率、这个词在整个索引中的稀有程度、以及文档本身的长度。稀有词的权重更高，长文档会被适当降权。",
+    "source": "es-guide.pdf",
+    "page": 4,
+    "category": "elasticsearch",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-067",
+    "content": "text 类型会被分词器切分成多个词条后建立倒排索引，适合全文搜索；keyword 类型完全不分词，整个字段值作为一个词条存储，适合精确匹配、排序、过滤和聚合。判断标准很简单：这个字段是用来搜的还是用来筛的。同一个字段可以通过 multi-field 同时映射为两种类型，比如 title 是 text 而 title.keyword 是 keyword，前者用于搜索，后者用于聚合统计。",
+    "source": "es-guide.pdf",
+    "page": 7,
+    "category": "elasticsearch",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-068",
+    "content": "dense_vector 是 Elasticsearch 用来存储稠密向量并执行 kNN 检索的字段类型，创建时必须声明 dims 维度和 similarity 相似度算法，可选 cosine、dot_product 或 l2_norm。设置 index 为 true 时会为该字段构建 HNSW 图以支持近似最近邻搜索。维度必须与生成向量的模型输出一致，而且写入后不能修改，换模型就意味着重建整个索引。",
+    "source": "es-guide.pdf",
+    "page": 11,
+    "category": "elasticsearch",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-069",
+    "content": "kNN 检索中 k 是最终返回的条数，num_candidates 是每个分片上先粗筛出来的候选池大小，两者的关系必须是 num_candidates 大于 k，通常取 k 的五到十倍。执行流程是先在 HNSW 图上快速找出 num_candidates 个近邻候选，再对这批候选精确计算相似度并排序，最后取前 k 个。调大 num_candidates 能提升召回准确率但会更慢，这是近似检索里典型的精度与速度权衡。",
+    "source": "es-guide.pdf",
+    "page": 15,
+    "category": "elasticsearch",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-070",
+    "content": "RRF 倒数排名融合只依据文档在各路检索结果中的排名来计算得分，公式是把各路的 1/(rank_constant + rank) 相加。它的关键优势是完全不看原始分数，因此无需处理 BM25 分数和向量相似度量纲不同的问题，也不需要调加权系数。rank_constant 默认六十，值越大则不同排名之间的分差越平缓。在两路结果中都排前列的文档会得到最高综合分。",
+    "source": "es-guide.pdf",
+    "page": 19,
+    "category": "elasticsearch",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-071",
+    "content": "查询条件放在 filter 里不参与相关性打分，结果可以被 Elasticsearch 缓存复用，因此性能明显优于放在 must 里。判断依据是这个条件影响的是要不要这条数据，还是这条数据该排多前。租户隔离、时间范围、状态枚举这类硬性条件都应该放进 filter；只有真正表达相关性的全文匹配才该放在 must。把租户过滤写在 must 里除了慢，还容易在改写查询时被漏掉，造成跨租户数据泄漏。",
+    "source": "es-guide.pdf",
+    "page": 23,
+    "category": "elasticsearch",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-072",
+    "content": "Elasticsearch 的默认分词器对中文按单个汉字切分，导致 BM25 精度很差：查询内存会匹配到任何含有内或存字的文档，比如保存数据。生产环境应该安装 IK 分词器，并在 mapping 中指定 analyzer 为 ik_max_word 用于建索引、search_analyzer 为 ik_smart 用于查询，前者切得细以提高召回，后者切得粗以提高精度。安装插件后必须重建索引才会生效。",
+    "source": "es-guide.pdf",
+    "page": 27,
+    "category": "elasticsearch",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-073",
+    "content": "索引的 mapping 一旦创建，就不能修改已有字段的类型、分词器或向量维度，只能新增字段。需要变更时的标准做法是新建一个索引，把数据重新灌进去，然后用别名做原子切换，这样对调用方完全透明。另一个容易踩的坑是不建索引就直接写入：Elasticsearch 的 dynamic mapping 会自行猜测类型，向量字段会被猜成普通 float 数组，写入不报错但 kNN 查询会直接失败。",
+    "source": "es-guide.pdf",
+    "page": 31,
+    "category": "elasticsearch",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-074",
+    "content": "Docker 镜像由多个只读层叠加而成，Dockerfile 里每一条会改变文件系统的指令都会生成一个新层，容器运行时在最上面再加一个可写层。层是可以被缓存和复用的，因此构建时应该把变动少的指令放在前面、变动频繁的放在后面，比如先 COPY 依赖清单并安装依赖，再 COPY 源代码，这样改代码不会导致依赖重新安装。多阶段构建可以只把编译产物复制到最终镜像，大幅减小体积。",
+    "source": "docker-guide.pdf",
+    "page": 5,
+    "category": "docker",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-075",
+    "content": "容器与虚拟机的根本区别在于容器直接共享宿主机的内核，只通过 namespace 隔离进程视图、网络和文件系统，通过 cgroup 限制 CPU 和内存资源；虚拟机则要跑一整套独立的操作系统内核。因此容器启动只需几百毫秒、额外开销接近于零，但隔离性弱于虚拟机，内核漏洞可能被用来突破边界，而且无法在 Linux 宿主机上直接运行其他内核的系统。",
+    "source": "docker-guide.pdf",
+    "page": 9,
+    "category": "docker",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-076",
+    "content": "容器内的数据默认写在可写层上，随容器删除一起消失。需要持久化必须显式挂载：volume 由 Docker 管理生命周期，适合数据库文件这类需要长期保存的数据；bind mount 直接映射宿主机的某个目录，适合开发时挂载源代码或注入配置文件。此外容器内的进程应该把日志打到标准输出而不是写文件，交由 Docker 的日志驱动统一收集。",
+    "source": "docker-guide.pdf",
+    "page": 14,
+    "category": "docker",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-077",
+    "content": "Nginx 作为反向代理时，upstream 块支持多种负载均衡策略：默认是轮询，按顺序依次分发；加权轮询通过 weight 参数让性能更强的后端承担更多流量；ip_hash 根据客户端 IP 计算哈希，让同一客户端固定落到同一后端，适合会话保存在本机内存的场景；least_conn 把请求发给当前活跃连接数最少的后端，适合请求处理时长差异很大的业务。",
+    "source": "nginx-guide.pdf",
+    "page": 7,
+    "category": "nginx",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-078",
+    "content": "proxy_pass 后面的地址带斜杠和不带斜杠行为完全不同。配置 location /api/ 时，proxy_pass 写成带斜杠的形式会把匹配到的 /api/ 前缀替换掉，请求 /api/users 转发出去变成 /users；不带斜杠则保留完整路径直接拼接，转发出去仍然是 /api/users。这个差异是 Nginx 配置里最常见的错误来源，改动时务必对着实际后端路径确认一遍。",
+    "source": "nginx-guide.pdf",
+    "page": 12,
+    "category": "nginx",
+    "tenant_id": "tenant-001"
+  },
+  {
+    "id": "chunk-079",
+    "content": "员工出差住宿费报销标准按城市分级执行：一线城市每晚上限六百元，二线城市四百五十元，其他城市三百五十元。城市分级参照公司行政部每年发布的名单，以实际入住地为准。确因展会、旺季等原因导致当地房价普遍超标的，需在提交报销前取得部门负责人的书面说明并附价格截图，否则超标部分由个人承担。同行两人以上应尽量合住标准间。",
+    "source": "finance-policy.pdf",
+    "page": 3,
+    "category": "finance",
+    "tenant_id": "tenant-002"
+  },
+  {
+    "id": "chunk-080",
+    "content": "所有报销事项必须提供合规的增值税发票，发票抬头须与公司工商登记全称完全一致，不得简写或使用曾用名，纳税人识别号也必须准确。个人抬头的发票、收据、白条以及内容为办公用品等笼统品目的发票均不予受理。电子发票需提交原始 PDF 文件，不接受截图或照片。发票如有涂改、缺项或超过验证期，需退回开票方重开。",
+    "source": "finance-policy.pdf",
+    "page": 5,
+    "category": "finance",
+    "tenant_id": "tenant-002"
+  },
+  {
+    "id": "chunk-081",
+    "content": "报销单需在费用实际发生后三十个自然日内提交，跨自然年度的费用一律不予报销，因此十二月发生的费用务必在当月内完成提交。单笔金额超过五千元的支出，必须先完成预算审批流程并取得审批编号，报销时在单据上填写该编号，否则财务将直接退单。已提交但被退回的单据，修改后重新提交的时间不重新计算。",
+    "source": "finance-policy.pdf",
+    "page": 8,
+    "category": "finance",
+    "tenant_id": "tenant-002"
+  },
+  {
+    "id": "chunk-082",
+    "content": "市内交通费凭有效票据实报实销，每人每月上限五百元。使用网约车需在报销单备注中填写出行事由、起止地点和同行人员，仅有行程单而无事由说明的将被退回。上下班通勤产生的交通费不属于可报销范围。因加班在二十二点后离开公司产生的打车费用，凭当日加班审批记录可单独申报，不计入月度上限。",
+    "source": "finance-policy.pdf",
+    "page": 12,
+    "category": "finance",
+    "tenant_id": "tenant-002"
+  },
+  {
+    "id": "chunk-083",
+    "content": "预算审批分为三级：一万元以下由部门负责人审批即可；一万元至十万元需在部门负责人签字后提交财务总监审批；超过十万元的支出必须提交总经理办公会集体决议，并在会议纪要中明确列出金额与用途。审批一律通过线上系统流转，纸质签字不再受理。已获批的预算仅在当年度有效，未执行部分不结转下一年度。",
+    "source": "finance-policy.pdf",
+    "page": 15,
+    "category": "finance",
+    "tenant_id": "tenant-002"
+  },
+  {
+    "id": "chunk-084",
+    "content": "员工入职满一年后开始享有五天年假，此后每满一年增加一天，最多累计至十五天。年假天数按自然年度核算，入职当年不足整年的按剩余月份折算并取整。年假原则上当年有效，未使用部分可延至次年三月三十一日，逾期自动清零且不折算现金。休年假需提前三个工作日在系统提交申请，连续休假超过五天的需部门负责人和分管领导双重审批。",
+    "source": "hr-handbook.pdf",
+    "page": 4,
+    "category": "hr",
+    "tenant_id": "tenant-002"
+  },
+  {
+    "id": "chunk-085",
+    "content": "加班需提前在系统提交申请并获得批准，未经审批的加班不计入加班时长，事后补录仅在系统故障等特殊情况下受理。加班费计算标准为：工作日延时加班一点五倍，休息日加班两倍，法定节假日加班三倍。休息日加班优先安排调休，调休需在三个月内使用完毕。管理岗及以上人员实行不定时工作制，不适用加班费条款。",
+    "source": "hr-handbook.pdf",
+    "page": 6,
+    "category": "hr",
+    "tenant_id": "tenant-002"
+  },
+  {
+    "id": "chunk-086",
+    "content": "试用期最长不超过六个月，具体时长依劳动合同期限确定：合同期一年以下的试用期不超过一个月，一至三年的不超过两个月，三年以上及无固定期限的不超过六个月。试用期内公司或员工任一方提出解除劳动关系，需提前三日书面通知；转正需通过直属上级的考核评估，考核不通过可延长试用期一次，延长后总时长仍不得超过法定上限。",
+    "source": "hr-handbook.pdf",
+    "page": 9,
+    "category": "hr",
+    "tenant_id": "tenant-002"
+  },
+  {
+    "id": "chunk-087",
+    "content": "公司为全体正式员工缴纳五险一金，包括养老、医疗、失业、工伤、生育保险和住房公积金。缴纳基数按上年度本人月平均工资核定，低于当地社平工资下限的按下限执行，高于上限的按上限执行，每年七月随社保年度统一调整一次。试用期同样正常缴纳，不存在转正后才开始缴纳的情况。员工可在系统自行查询个人缴纳明细。",
+    "source": "hr-handbook.pdf",
+    "page": 13,
+    "category": "hr",
+    "tenant_id": "tenant-002"
+  },
+  {
+    "id": "chunk-088",
+    "content": "员工离职需提前三十日提交书面离职申请，试用期内提前三日。申请获批后需完成工作交接并由接手人和直属上级共同确认，归还包括笔记本电脑、门禁卡、办公钥匙在内的全部公司资产，结清借款、备用金及未核销的报销款项，方可办理离职手续。离职当月工资按实际出勤天数计算，随下一个工资发放日一并支付。",
+    "source": "hr-handbook.pdf",
+    "page": 17,
+    "category": "hr",
+    "tenant_id": "tenant-002"
+  },
+  {
+    "id": "chunk-089",
+    "content": "远程访问公司内网必须通过 VPN，禁止使用任何第三方远程控制软件将办公电脑暴露到公网。VPN 账号与办公邮箱绑定，首次使用需在 IT 系统提交开通申请并完成双因素认证绑定。连续三次密码错误将锁定账号三十分钟，可自行等待解锁或联系 IT 部重置。VPN 连接期间禁止同时接入其他不可信网络，离开工位应主动断开。",
+    "source": "office-it.pdf",
+    "page": 2,
+    "category": "it",
+    "tenant_id": "tenant-002"
+  },
+  {
+    "id": "chunk-090",
+    "content": "办公账号密码长度不得少于十二位，须同时包含大写字母、小写字母、数字和特殊符号，不得包含本人姓名、生日或公司名称等易猜信息。系统强制每九十天更换一次，且新密码不能与前五次使用过的密码重复。严禁在多个系统间复用同一密码，也严禁将密码以明文形式记录在文档、聊天记录或便签中。推荐使用公司统一采购的密码管理器保存。",
+    "source": "office-it.pdf",
+    "page": 4,
+    "category": "it",
+    "tenant_id": "tenant-002"
+  },
+  {
+    "id": "chunk-091",
+    "content": "笔记本电脑、显示器、移动硬盘等办公设备由 IT 部统一采购、申领和登记，员工领用时需在资产系统签字确认，设备与个人绑定并在离职时归还。设备发生遗失或被盗，须在二十四小时内向 IT 部和直属上级报备，提交书面情况说明并配合远程擦除数据。因个人保管不当造成的遗失或损坏，需按设备折余价值承担相应赔偿。",
+    "source": "office-it.pdf",
+    "page": 7,
+    "category": "it",
+    "tenant_id": "tenant-002"
+  }
+]
