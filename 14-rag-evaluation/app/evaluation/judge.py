@@ -1,4 +1,5 @@
 import json
+import re
 
 
 class LLMJudge:
@@ -84,6 +85,69 @@ Answer 是否与 Ground Truth
             prompt
         )
 
-        return json.loads(
+        return self._parse(
             result
         )
+
+    # LLM 很爱把 JSON 包在 ```json 围栏里，
+    # 也可能在前后再带一段解释文字。
+    # 直接 json.loads 会抛异常，
+    # 一个 case 崩掉就把整轮 Evaluation 拖死，
+    # 所以这里必须兜底。
+    @staticmethod
+    def _parse(
+        raw: str,
+    ) -> dict:
+
+        text = (raw or "").strip()
+
+        # 去掉 Markdown 代码围栏
+        if text.startswith("```"):
+
+            text = re.sub(
+                r"^```[a-zA-Z]*\s*",
+                "",
+                text,
+            )
+
+            text = re.sub(
+                r"\s*```$",
+                "",
+                text,
+            )
+
+        try:
+            return json.loads(text)
+
+        except json.JSONDecodeError:
+            pass
+
+        # 退一步：从文本里抠出第一个 {...}
+        match = re.search(
+            r"\{.*\}",
+            text,
+            re.DOTALL,
+        )
+
+        if match:
+
+            try:
+                return json.loads(
+                    match.group(0)
+                )
+
+            except json.JSONDecodeError:
+                pass
+
+        # 彻底解析不出来时，
+        # 给 0 分并把原始输出留在 reason 里，
+        # 方便事后排查是 Prompt 问题还是模型问题。
+        return {
+            "answer_relevance": 0.0,
+            "faithfulness": 0.0,
+            "correctness": 0.0,
+            "reason": (
+                "无法解析 LLM Judge 输出："
+                f"{raw!r}"
+            ),
+        }

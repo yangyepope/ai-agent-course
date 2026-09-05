@@ -1,0 +1,76 @@
+from typing import Any
+
+
+def build_chunk_metadata(
+    source: str,
+    document_title: str,
+    chunk_index: int,
+    **extra: Any,
+) -> dict[str, Any]:
+
+    metadata = {
+        "source": source,
+        "document_title": document_title,
+        "chunk_index": chunk_index,
+    }
+
+    metadata.update(extra)
+
+    return metadata
+
+
+"""
+使用：
+
+metadata = build_chunk_metadata(
+    source="redis.md",
+    document_title="Redis 内存管理",
+    chunk_index=0,
+    section="maxmemory",
+)
+
+得到：
+
+{
+    "source": "redis.md",
+    "document_title": "Redis 内存管理",
+    "chunk_index": 0,
+    "section": "maxmemory"
+}
+
+"""
+
+
+# 企业真实使用
+"""
+真正的企业 RAG Chunk Metadata
+
+实际项目里建议逐渐形成：
+
+{
+    "document_id": "doc-001",
+    "source": "redis.md",
+    "file_name": "redis.md",
+    "file_type": "markdown",
+    "title": "Redis 内存管理",
+    "section": "maxmemory",
+    "page": 3,
+    "chunk_index": 5,
+    "parent_chunk_id": "parent-002",
+}
+
+这些数据以后会用于：
+
+权限过滤
+引用来源
+检索过滤
+Parent-Child Retrieval
+日志追踪
+Debug
+Evaluation
+
+所以现在就应该养成：
+
+Chunk 必须携带 Metadata。
+
+"""

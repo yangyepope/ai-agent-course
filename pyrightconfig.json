@@ -103,6 +103,18 @@
       "extraPaths": [
         "14-rag-evaluation"
       ]
+    },
+    {
+      "root": "15-rag-chunking",
+      "extraPaths": [
+        "15-rag-chunking"
+      ]
+    },
+    {
+      "root": "16-query-optimization",
+      "extraPaths": [
+        "16-query-optimization"
+      ]
     }
   ]
 }

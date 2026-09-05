@@ -262,3 +262,63 @@ NDCG = 1.0
 
 NDCG 就会降低。
 """
+
+
+# NDCG 需要的是"每个位置的相关性分数"，
+# 但 dataset 里只有 relevant_chunks 这种 0/1 判断，
+# 所以要先把 retrieved_ids 翻译成增益序列。
+def build_relevance_scores(
+    retrieved_ids: Sequence[str],
+    relevant_ids: Sequence[str],
+    k: int,
+) -> list[int]:
+
+    relevant = set(
+        relevant_ids
+    )
+
+    scores = [
+        1 if doc_id in relevant else 0
+        for doc_id in retrieved_ids[:k]
+    ]
+
+    # 召回不足时补 0，
+    # 保证前 k 位就是真实的检索结果。
+    while len(scores) < k:
+        scores.append(0)
+
+    # 关键一步：没被召回的相关文档也要记进来。
+    # 否则 ndcg_at_k 内部排序算出来的 ideal 会偏小，
+    # 导致"漏召回"反而拿到虚高的 NDCG。
+    hit_count = sum(scores)
+
+    missed_count = len(relevant) - hit_count
+
+    scores.extend(
+        [1] * missed_count
+    )
+
+    return scores
+
+
+# 举例说明为什么要补"漏召回"：
+"""
+relevant：A、B
+retrieved@5：X A X X X
+
+如果只看召回结果：
+
+    [0, 1, 0, 0, 0]
+
+ideal 排序后 = [1, 0, 0, 0, 0]
+
+NDCG = 0.63   ← 虚高，B 完全没召回却没被惩罚
+
+补上漏掉的 B 之后：
+
+    [0, 1, 0, 0, 0, 1]
+
+ideal 排序后 = [1, 1, 0, 0, 0, 0]
+
+NDCG = 0.63 / 1.63 = 0.39   ← 这才是真实水平
+"""

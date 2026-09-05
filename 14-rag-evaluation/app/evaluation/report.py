@@ -5,15 +5,26 @@ class EvaluationReport:
         dataset_size: int,
     ):
         self.dataset_size = dataset_size
-        self.metrics = {}
+
+        # {section: {name: value}}
+        # 检索指标和生成指标是两类东西，
+        # 混在一起打印会看不出问题出在哪一段。
+        self.sections: dict[
+            str,
+            dict[str, float],
+        ] = {}
 
     def add(
         self,
         name: str,
         value: float,
+        section: str = "Retrieval",
     ):
 
-        self.metrics[name] = value
+        self.sections.setdefault(
+            section,
+            {},
+        )[name] = value
 
     def print(self):
 
@@ -36,24 +47,26 @@ class EvaluationReport:
             f"{self.dataset_size}"
         )
 
-        print()
-
-        print(
-            "Retrieval"
-        )
-
-        print(
-            "-" * 60
-        )
-
-        for name, value in (
-            self.metrics.items()
+        for section, metrics in (
+            self.sections.items()
         ):
 
+            print()
+
+            print(section)
+
             print(
-                f"{name:<25}"
-                f": {value:.4f}"
+                "-" * 60
             )
+
+            for name, value in (
+                metrics.items()
+            ):
+
+                print(
+                    f"{name:<25}"
+                    f": {value:.4f}"
+                )
 
         print()
 
