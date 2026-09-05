@@ -39,6 +39,7 @@ dependencies = [
     # 客户端必须用 8.x（9.x 客户端发的 Accept 头声明 compatible-with=9，
     # 8.x 服务端会直接 400 拒绝，导致 ping() 返回 False）。
     "elasticsearch>=8.13,<9",
+    "pytest>=9.1.1",
 ]
 
 [dependency-groups]

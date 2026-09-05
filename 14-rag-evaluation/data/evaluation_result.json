@@ -1,0 +1,178 @@
+{
+  "recall_at_k": 0.5,
+  "precision_at_k": 0.12000000000000002,
+  "mrr": 0.38333333333333336,
+  "details": [
+    {
+      "id": "q001",
+      "question": "Redis 如何设置最大内存？",
+      "retrieved_ids": [
+        "redis-001",
+        "redis-002",
+        "redis-003",
+        "redis-004",
+        "redis-005"
+      ],
+      "relevant_ids": [
+        "redis-001"
+      ],
+      "recall": 1.0,
+      "precision": 0.2,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "id": "q002",
+      "question": "Redis 达到最大内存后怎么办？",
+      "retrieved_ids": [
+        "redis-001",
+        "redis-002",
+        "redis-003",
+        "redis-004",
+        "redis-005"
+      ],
+      "relevant_ids": [
+        "redis-002"
+      ],
+      "recall": 1.0,
+      "precision": 0.2,
+      "reciprocal_rank": 0.5
+    },
+    {
+      "id": "q003",
+      "question": "Redis 有哪些内存淘汰策略？",
+      "retrieved_ids": [
+        "redis-001",
+        "redis-002",
+        "redis-003",
+        "redis-004",
+        "redis-005"
+      ],
+      "relevant_ids": [
+        "redis-003",
+        "redis-004"
+      ],
+      "recall": 1.0,
+      "precision": 0.4,
+      "reciprocal_rank": 0.3333333333333333
+    },
+    {
+      "id": "q004",
+      "question": "Redis 的 RDB 是什么？",
+      "retrieved_ids": [
+        "redis-005",
+        "redis-004",
+        "redis-006",
+        "redis-007",
+        "redis-009"
+      ],
+      "relevant_ids": [
+        "redis-005"
+      ],
+      "recall": 1.0,
+      "precision": 0.2,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "id": "q005",
+      "question": "Redis 的 AOF 是什么？",
+      "retrieved_ids": [
+        "redis-006",
+        "redis-004",
+        "redis-005",
+        "redis-007",
+        "redis-009"
+      ],
+      "relevant_ids": [
+        "redis-006"
+      ],
+      "recall": 1.0,
+      "precision": 0.2,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "id": "q006",
+      "question": "Redis 如何设置密码？",
+      "retrieved_ids": [
+        "redis-001",
+        "redis-002",
+        "redis-003",
+        "redis-004",
+        "redis-005"
+      ],
+      "relevant_ids": [
+        "redis-007"
+      ],
+      "recall": 0.0,
+      "precision": 0.0,
+      "reciprocal_rank": 0.0
+    },
+    {
+      "id": "q007",
+      "question": "Redis 支持哪些数据类型？",
+      "retrieved_ids": [
+        "redis-001",
+        "redis-002",
+        "redis-003",
+        "redis-004",
+        "redis-005"
+      ],
+      "relevant_ids": [
+        "redis-008"
+      ],
+      "recall": 0.0,
+      "precision": 0.0,
+      "reciprocal_rank": 0.0
+    },
+    {
+      "id": "q008",
+      "question": "Redis 是内存数据库吗？",
+      "retrieved_ids": [
+        "redis-001",
+        "redis-002",
+        "redis-003",
+        "redis-004",
+        "redis-005"
+      ],
+      "relevant_ids": [
+        "redis-009"
+      ],
+      "recall": 0.0,
+      "precision": 0.0,
+      "reciprocal_rank": 0.0
+    },
+    {
+      "id": "q009",
+      "question": "Redis 为什么速度快？",
+      "retrieved_ids": [
+        "redis-001",
+        "redis-002",
+        "redis-003",
+        "redis-004",
+        "redis-005"
+      ],
+      "relevant_ids": [
+        "redis-010"
+      ],
+      "recall": 0.0,
+      "precision": 0.0,
+      "reciprocal_rank": 0.0
+    },
+    {
+      "id": "q010",
+      "question": "Redis 如何删除一个 Key？",
+      "retrieved_ids": [
+        "redis-001",
+        "redis-002",
+        "redis-003",
+        "redis-004",
+        "redis-005"
+      ],
+      "relevant_ids": [
+        "redis-011"
+      ],
+      "recall": 0.0,
+      "precision": 0.0,
+      "reciprocal_rank": 0.0
+    }
+  ]
+}

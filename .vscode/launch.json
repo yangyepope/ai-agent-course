@@ -18,6 +18,53 @@
         "ALL_PROXY": "",
         "all_proxy": ""
       }
+    },
+    {
+      // 逐步调试 14 章的评估主流程。
+      // cwd 必须是章节目录：evaluate.py 里 "data/evaluation_dataset.json" 是相对路径。
+      // PYTHONPATH 必须加章节目录：脚本在 scripts/ 下，sys.path[0] 是 scripts/，
+      // 不设的话 `from app.evaluation.dataset import ...` 会 ModuleNotFoundError。
+      "name": "Evaluate: 14-rag-evaluation",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/14-rag-evaluation/scripts/evaluate.py",
+      "cwd": "${workspaceFolder}/14-rag-evaluation",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "console": "integratedTerminal",
+      // 在第一行就暂停，方便用 F10/F11 走完整个流程。
+      // 只想跑到断点、不想每次停在开头，把这行改成 false。
+      "stopOnEntry": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/14-rag-evaluation"
+      }
+    },
+    {
+      // 同上，但不停在开头，直接跑到你打的断点。日常用这个。
+      "name": "Evaluate: 14-rag-evaluation (跑到断点)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/14-rag-evaluation/scripts/evaluate.py",
+      "cwd": "${workspaceFolder}/14-rag-evaluation",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/14-rag-evaluation"
+      }
+    },
+    {
+      // 调试 14 章的单元测试。test_metrics.py 同样是 `from app...`，
+      // 所以 cwd 和 PYTHONPATH 的要求和上面一致。
+      "name": "Pytest: 14-rag-evaluation",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["test", "-v"],
+      "cwd": "${workspaceFolder}/14-rag-evaluation",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/14-rag-evaluation"
+      }
     }
   ]
 }

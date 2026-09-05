@@ -97,6 +97,12 @@
       "extraPaths": [
         "13-rag-app"
       ]
+    },
+    {
+      "root": "14-rag-evaluation",
+      "extraPaths": [
+        "14-rag-evaluation"
+      ]
     }
   ]
 }

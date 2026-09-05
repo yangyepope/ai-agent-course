@@ -1,0 +1,83 @@
+[
+  {
+    "id": "q001",
+    "question": "Redis 如何设置最大内存？",
+    "ground_truth": "可以通过 maxmemory 参数设置 Redis 的最大内存限制。",
+    "relevant_chunks": [
+      "redis-001"
+    ]
+  },
+  {
+    "id": "q002",
+    "question": "Redis 达到最大内存后怎么办？",
+    "ground_truth": "Redis 达到最大内存后，会根据 maxmemory-policy 配置决定如何处理数据。",
+    "relevant_chunks": [
+      "redis-002"
+    ]
+  },
+  {
+    "id": "q003",
+    "question": "Redis 有哪些内存淘汰策略？",
+    "ground_truth": "Redis 提供多种内存淘汰策略，例如 noeviction、allkeys-lru、volatile-lru 等。",
+    "relevant_chunks": [
+      "redis-003",
+      "redis-004"
+    ]
+  },
+  {
+    "id": "q004",
+    "question": "Redis 的 RDB 是什么？",
+    "ground_truth": "RDB 是 Redis 的一种持久化方式，通过生成数据集快照保存数据。",
+    "relevant_chunks": [
+      "redis-005"
+    ]
+  },
+  {
+    "id": "q005",
+    "question": "Redis 的 AOF 是什么？",
+    "ground_truth": "AOF 通过记录 Redis 执行的写命令来实现数据持久化。",
+    "relevant_chunks": [
+      "redis-006"
+    ]
+  },
+  {
+    "id": "q006",
+    "question": "Redis 如何设置密码？",
+    "ground_truth": "可以通过 Redis 配置中的 requirepass 设置密码。",
+    "relevant_chunks": [
+      "redis-007"
+    ]
+  },
+  {
+    "id": "q007",
+    "question": "Redis 支持哪些数据类型？",
+    "ground_truth": "Redis 支持 String、Hash、List、Set、Sorted Set 等数据类型。",
+    "relevant_chunks": [
+      "redis-008"
+    ]
+  },
+  {
+    "id": "q008",
+    "question": "Redis 是内存数据库吗？",
+    "ground_truth": "Redis 主要将数据存储在内存中，同时支持 RDB 和 AOF 等持久化机制。",
+    "relevant_chunks": [
+      "redis-009"
+    ]
+  },
+  {
+    "id": "q009",
+    "question": "Redis 为什么速度快？",
+    "ground_truth": "Redis 主要基于内存操作，并采用高效的数据结构和事件驱动机制，因此具有较高的性能。",
+    "relevant_chunks": [
+      "redis-010"
+    ]
+  },
+  {
+    "id": "q010",
+    "question": "Redis 如何删除一个 Key？",
+    "ground_truth": "可以使用 DEL 命令删除 Redis 中的 Key。",
+    "relevant_chunks": [
+      "redis-011"
+    ]
+  }
+]
